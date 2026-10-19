@@ -1,0 +1,171 @@
+-- 自动验证：预期失败的记录在事务中测试后回滚，不污染样本。
+-- 跨表规则不是CHECK：另用SQL查询证明能识别错误，再回滚。
+USE finance_bp_stage3;
+DELIMITER $$
+CREATE PROCEDURE sp_stage3_constraint_tests()
+BEGIN
+  DECLARE v_errno INT DEFAULT 0;
+  DECLARE v_count INT DEFAULT 0;
+  IF COALESCE(@stage3_quality_violations,-1)<>0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='QUALITY_CHECKS_FAILED_OR_NOT_RUN';
+  END IF;
+  IF COALESCE(@stage3_case_failures,-1)<>0 OR COALESCE(@stage3_monthly_failures,-1)<>0 OR COALESCE(@stage3_budget_failures,-1)<>0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='SAMPLE_VERIFICATION_FAILED_OR_NOT_RUN';
+  END IF;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO products VALUES ('P001','重复商品','STORAGE','件',1,1);
+  END;
+  ROLLBACK;
+  IF v_errno<>1062 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='DUPLICATE_PRODUCT_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'DUPLICATE_PRODUCT' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO order_items VALUES ('I_TEST_FK','O_S01',99,'P_UNKNOWN',1,10,0,5,4);
+  END;
+  ROLLBACK;
+  IF v_errno<>1452 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='UNKNOWN_PRODUCT_FK_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'UNKNOWN_PRODUCT_FK' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO order_items VALUES ('I_TEST_Q','O_S01',99,'P001',-1,10,0,5,4);
+  END;
+  ROLLBACK;
+  IF v_errno<>3819 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='NEGATIVE_QUANTITY_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'NEGATIVE_QUANTITY' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO order_items VALUES ('I_TEST_D','O_S01',99,'P001',1,10,11,5,4);
+  END;
+  ROLLBACK;
+  IF v_errno<>3819 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='EXCESS_DISCOUNT_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'EXCESS_DISCOUNT' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO orders VALUES ('O_TEST_DATE','U0001','2026-09-01',NULL,'C01','R01','completed',3);
+  END;
+  ROLLBACK;
+  IF v_errno<>3819 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='COMPLETED_WITHOUT_DATE_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'COMPLETED_WITHOUT_DATE' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO budget_sales SELECT * FROM budget_sales WHERE month='2026-09-01' AND product_id='P001' AND channel_code='C01';
+  END;
+  ROLLBACK;
+  IF v_errno<>1062 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='DUPLICATE_BUDGET_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'DUPLICATE_BUDGET' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO expenses SELECT 'E_TEST',expense_date,department,expense_category,channel_code,region_code,amount,source_system,source_reference,import_batch_id FROM expenses WHERE expense_id='E1';
+  END;
+  ROLLBACK;
+  IF v_errno<>1062 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='DUPLICATE_EXPENSE_SOURCE_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'DUPLICATE_EXPENSE_SOURCE' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO returns VALUES ('T_TEST_RECOVER','I_S01','2026-09-10',1,2,110,140,'return_resalable',5);
+  END;
+  ROLLBACK;
+  IF v_errno<>3819 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RECOVERY_EXCEEDS_RETURN_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'RECOVERY_EXCEEDS_RETURN' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO budget_sales VALUES ('B_TEST','2026-09-15','P001','C01','R01',1,100,70,0,0,7);
+  END;
+  ROLLBACK;
+  IF v_errno<>3819 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='BUDGET_NOT_MONTH_START_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'BUDGET_NOT_MONTH_START' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  SET v_errno=0;
+  START TRANSACTION;
+  BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 v_errno=MYSQL_ERRNO;
+    INSERT INTO import_batches (batch_id,dataset_type,file_name,file_hash,started_at,status) SELECT 99,dataset_type,'renamed.json',file_hash,NOW(),'pending' FROM import_batches WHERE batch_id=3;
+  END;
+  ROLLBACK;
+  IF v_errno<>1062 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='DUPLICATE_FILE_CONTENT_DID_NOT_RAISE_EXPECTED_ERROR';
+  END IF;
+  SELECT 'DUPLICATE_FILE_CONTENT' AS test_name,'PASS' AS result,v_errno AS expected_error;
+
+  START TRANSACTION;
+  INSERT INTO returns VALUES ('T_TEST_OVER','I_S01','2026-09-10',6,6,600,420,'return_resalable',5);
+  SELECT COUNT(*) INTO v_count FROM (
+    SELECT i.order_item_id FROM order_items i JOIN returns r ON r.order_item_id=i.order_item_id
+    WHERE i.order_item_id='I_S01'
+    GROUP BY i.order_item_id,i.quantity,i.unit_list_price,i.discount_amount,i.unit_cost_snapshot
+    HAVING SUM(r.refund_amount)>i.quantity*i.unit_list_price-i.discount_amount OR SUM(r.returned_quantity)>i.quantity
+    OR SUM(r.cogs_reversal_amount)>i.quantity*i.unit_cost_snapshot
+  ) bad;
+  ROLLBACK;
+  IF v_count<>1 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='CROSS_TABLE_CUMULATIVE_NOT_DETECTED'; END IF;
+  SELECT 'CUMULATIVE_RETURN_DETECTED_BY_QUERY' AS test_name,'PASS' AS result;
+
+  START TRANSACTION;
+  INSERT INTO returns VALUES ('T_TEST_EARLY','I_S01','2026-09-01',1,1,110,70,'return_resalable',5);
+  SELECT COUNT(*) INTO v_count FROM returns r JOIN order_items i ON i.order_item_id=r.order_item_id
+  JOIN orders o ON o.order_id=i.order_id WHERE r.return_id='T_TEST_EARLY' AND r.refund_date<o.recognized_date;
+  ROLLBACK;
+  IF v_count<>1 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='EARLY_RETURN_NOT_DETECTED'; END IF;
+  SELECT 'EARLY_RETURN_DETECTED_BY_QUERY' AS test_name,'PASS' AS result;
+
+  START TRANSACTION;
+  INSERT INTO returns VALUES ('T_TEST_COST','I_S01','2026-09-10',1,1,110,60,'return_resalable',5);
+  SELECT COUNT(*) INTO v_count FROM returns r JOIN order_items i ON i.order_item_id=r.order_item_id
+  WHERE r.return_id='T_TEST_COST' AND r.cogs_reversal_amount<>r.recoverable_quantity*i.unit_cost_snapshot;
+  ROLLBACK;
+  IF v_count<>1 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='WRONG_RETURN_COST_NOT_DETECTED'; END IF;
+  SELECT 'WRONG_COST_DETECTED_BY_QUERY' AS test_name,'PASS' AS result;
+
+  SELECT COUNT(*) INTO v_count FROM returns WHERE return_id LIKE 'T_TEST_%';
+  IF v_count<>0 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='NEGATIVE_TEST_ROWS_NOT_ROLLED_BACK'; END IF;
+  SELECT 'NEGATIVE_TEST_ROLLBACK' AS test_name,'PASS' AS result;
+END$$
+DELIMITER ;
+CALL sp_stage3_constraint_tests();
+DROP PROCEDURE sp_stage3_constraint_tests;

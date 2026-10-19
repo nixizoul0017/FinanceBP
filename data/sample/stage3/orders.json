@@ -1,0 +1,102 @@
+[
+  {
+    "order_id": "O_S01",
+    "customer_id": "U0001",
+    "order_date": "2026-09-01",
+    "recognized_date": "2026-09-03",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S02",
+    "customer_id": "U0002",
+    "order_date": "2026-09-01",
+    "recognized_date": null,
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "cancelled",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S03",
+    "customer_id": "U0003",
+    "order_date": "2026-09-01",
+    "recognized_date": "2026-09-03",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S04",
+    "customer_id": "U0001",
+    "order_date": "2026-09-01",
+    "recognized_date": "2026-09-03",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S05",
+    "customer_id": "U0002",
+    "order_date": "2026-09-01",
+    "recognized_date": "2026-09-03",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S06",
+    "customer_id": "U0003",
+    "order_date": "2026-09-01",
+    "recognized_date": "2026-09-03",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S07",
+    "customer_id": "U0001",
+    "order_date": "2026-09-01",
+    "recognized_date": "2026-09-03",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S08",
+    "customer_id": "U0002",
+    "order_date": "2026-09-01",
+    "recognized_date": null,
+    "channel_code": "C01",
+    "region_code": "R01",
+    "order_status": "pending",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S09",
+    "customer_id": "U0003",
+    "order_date": "2026-09-15",
+    "recognized_date": "2026-09-16",
+    "channel_code": "C02",
+    "region_code": "R02",
+    "order_status": "completed",
+    "import_batch_id": 3
+  },
+  {
+    "order_id": "O_S10",
+    "customer_id": "U0001",
+    "order_date": "2026-09-19",
+    "recognized_date": "2026-09-20",
+    "channel_code": "C03",
+    "region_code": "R03",
+    "order_status": "completed",
+    "import_batch_id": 3
+  }
+]

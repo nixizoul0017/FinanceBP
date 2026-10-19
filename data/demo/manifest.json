@@ -1,0 +1,86 @@
+{
+  "dataset": "demo_v1",
+  "seed": 20261012,
+  "requested_order_lines": 50000,
+  "coverage": {
+    "complete_start": "2024-01-01",
+    "complete_end": "2026-09-30"
+  },
+  "files": {
+    "products": [
+      {
+        "file": "products.csv",
+        "sha256": "f04996a3defb79b49b62aacf54f1d72938871be4e51338f91c3a06776306e3f7",
+        "rows": 20
+      }
+    ],
+    "customers": [
+      {
+        "file": "customers.csv",
+        "sha256": "980bb0bdc40dd93ac16844801971d9323c3434c5cd0317f3d92b7ed86253e04e",
+        "rows": 3000
+      }
+    ],
+    "orders": [
+      {
+        "file": "orders.csv",
+        "sha256": "09d083606c3943f7ec521d61649f4e8d4903524acc2fbf0a75a9b5df3eb210ac",
+        "rows": 35056
+      }
+    ],
+    "order_items": [
+      {
+        "file": "order_items.csv",
+        "sha256": "a681a0a4af374e2099d81b4e011137193a41d8f916d558831f2340e2acb40e5b",
+        "rows": 50000
+      }
+    ],
+    "returns": [
+      {
+        "file": "returns.csv",
+        "sha256": "fdd3fe3f98b43c587cb68f04c0fc3146a10fbf5c0c9bd205b31d0e06b11f56e5",
+        "rows": 2390
+      }
+    ],
+    "expenses": [
+      {
+        "file": "expenses.csv",
+        "sha256": "66818a2539900aee554d1610d68bf72ea0f34736737066b2c13cc7a86905688a",
+        "rows": 363
+      }
+    ],
+    "budget_sales": [
+      {
+        "file": "budget_sales.csv",
+        "sha256": "7c73f42b360258f7a3ae01c753d5d38a513347b2b0bba12216cf70bc7dd49a67",
+        "rows": 2880
+      }
+    ],
+    "budget_expenses": [
+      {
+        "file": "budget_expenses.csv",
+        "sha256": "e3a28b4bcf70194db3d72ffe7cbb8ef4db9891fe431c3d0334456b83e56c867e",
+        "rows": 132
+      }
+    ]
+  },
+  "row_counts": {
+    "products": 20,
+    "customers": 3000,
+    "orders": 35056,
+    "order_items": 50000,
+    "returns": 2390,
+    "expenses": 363,
+    "budget_sales": 2880,
+    "budget_expenses": 132
+  },
+  "canonical_row_counts": {
+    "sales": 47535,
+    "refunds": 2390,
+    "expenses": 363,
+    "sales_budget": 2880,
+    "expense_budget": 132
+  },
+  "budget_basis": "2025 same month actual; quantity +12%, net price +3%, unit cost +3%, refunds 4%, cost reversal 3%; expenses +10%; frozen B2026_V1",
+  "money_storage": "decimal text, CNY excluding tax"
+}

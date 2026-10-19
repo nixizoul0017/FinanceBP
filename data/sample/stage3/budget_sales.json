@@ -1,0 +1,67 @@
+[
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "product_id": "P001",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "budget_quantity": 30,
+    "budget_net_unit_price": 110,
+    "budget_unit_cost": 70,
+    "budget_refund_amount": 900,
+    "budget_cogs_reversal_amount": 560,
+    "import_batch_id": 7
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "product_id": "P001",
+    "channel_code": "C02",
+    "region_code": "R02",
+    "budget_quantity": 5,
+    "budget_net_unit_price": 120,
+    "budget_unit_cost": 70,
+    "budget_refund_amount": 0,
+    "budget_cogs_reversal_amount": 0,
+    "import_batch_id": 7
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "product_id": "P002",
+    "channel_code": "C02",
+    "region_code": "R02",
+    "budget_quantity": 2,
+    "budget_net_unit_price": 30,
+    "budget_unit_cost": 15,
+    "budget_refund_amount": 0,
+    "budget_cogs_reversal_amount": 0,
+    "import_batch_id": 7
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "product_id": "P003",
+    "channel_code": "C03",
+    "region_code": "R03",
+    "budget_quantity": 4,
+    "budget_net_unit_price": 80,
+    "budget_unit_cost": 45,
+    "budget_refund_amount": 0,
+    "budget_cogs_reversal_amount": 0,
+    "import_batch_id": 7
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-10-01",
+    "product_id": "P001",
+    "channel_code": "C01",
+    "region_code": "R01",
+    "budget_quantity": 0,
+    "budget_net_unit_price": 110,
+    "budget_unit_cost": 70,
+    "budget_refund_amount": 110,
+    "budget_cogs_reversal_amount": 70,
+    "import_batch_id": 7
+  }
+]

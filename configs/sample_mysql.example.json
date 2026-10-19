@@ -1,0 +1,56 @@
+{
+  "profile_version": 1,
+  "entity_id": "XCYX_SAMPLE",
+  "rule_version": "sales_v1",
+  "coverage": {
+    "complete_start": "2026-09-01",
+    "complete_end": "2026-09-30",
+    "boundary_event_end": "2026-10-05"
+  },
+  "semantics": {
+    "currency": "CNY",
+    "amount_unit": "yuan",
+    "tax_basis": "excluding_tax",
+    "quantity_unit": "件",
+    "sales_basis": "discounted_before_refund",
+    "refund_basis": "separate_positive_events",
+    "cost_basis": "historic_transaction_cost"
+  },
+  "adapter": "ecommerce_v1",
+  "source": {
+    "kind": "mysql",
+    "connection": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "user": "root",
+      "database": "finance_bp_stage3",
+      "password_env": "FINANCE_DB_PASSWORD"
+    }
+  },
+  "tables": {
+    "products": {
+      "table": "products"
+    },
+    "customers": {
+      "table": "customers"
+    },
+    "orders": {
+      "table": "orders"
+    },
+    "order_items": {
+      "table": "order_items"
+    },
+    "returns": {
+      "table": "returns"
+    },
+    "expenses": {
+      "table": "expenses"
+    },
+    "budget_sales": {
+      "table": "budget_sales"
+    },
+    "budget_expenses": {
+      "table": "budget_expenses"
+    }
+  }
+}

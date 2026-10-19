@@ -1,0 +1,22 @@
+# Machine-specific environment and Python caches
+.venv/
+__pycache__/
+*.pyc
+**/node_modules/
+
+# Private configuration
+.env
+.env.*
+!.env.example
+configs/*.local.json
+.streamlit/secrets.toml
+
+# Generated reports, archives, temporary databases and acceptance logs
+outputs/
+dist/
+*.log
+.stage*_validation/
+.stage*_tests_tmp/
+.desktop_validation/
+
+# Fixed public test inputs live in tests/fixtures; screenshots in docs/assets.

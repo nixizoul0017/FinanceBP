@@ -1,0 +1,18 @@
+FinanceBP 1.0.0 - Windows 11 x64
+
+Personal use and portfolio build. This installer and FinanceBP.exe are NOT code signed.
+Windows may display an unknown publisher notice. Do not disable Windows security.
+No payment, purchase of a certificate, or network account is required.
+
+Python 3.13 and all application dependencies are included. Microsoft WebView2
+will be installed from the bundled Microsoft-signed offline component if missing.
+No Python/pip download is performed by the installed application.
+
+Personal records are stored in %LOCALAPPDATA%\FinanceBP, separately from the app.
+Upgrading or uninstalling the application preserves that data. Back it up through
+the File menu before changing computers. External company source files and MySQL
+databases are not included in backups and are only read by FinanceBP.
+
+Demonstration data is simulated. Actual use requires confirming source mappings,
+financial definitions and reconciliation. This build is awaiting clean Windows
+machine acceptance; see the included Windows application guide for test status.

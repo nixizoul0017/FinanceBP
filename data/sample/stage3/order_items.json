@@ -1,0 +1,123 @@
+[
+  {
+    "order_item_id": "I_S01",
+    "order_id": "O_S01",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S02",
+    "order_id": "O_S02",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S03",
+    "order_id": "O_S03",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S04",
+    "order_id": "O_S04",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S05",
+    "order_id": "O_S05",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S06",
+    "order_id": "O_S06",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S07",
+    "order_id": "O_S07",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S08",
+    "order_id": "O_S08",
+    "line_number": 1,
+    "product_id": "P002",
+    "quantity": 2,
+    "unit_list_price": 30,
+    "discount_amount": 0,
+    "unit_cost_snapshot": 15,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S09",
+    "order_id": "O_S09",
+    "line_number": 1,
+    "product_id": "P001",
+    "quantity": 5,
+    "unit_list_price": 120,
+    "discount_amount": 50,
+    "unit_cost_snapshot": 70,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S10",
+    "order_id": "O_S10",
+    "line_number": 1,
+    "product_id": "P003",
+    "quantity": 3,
+    "unit_list_price": 80,
+    "discount_amount": 0,
+    "unit_cost_snapshot": 45,
+    "import_batch_id": 4
+  },
+  {
+    "order_item_id": "I_S09_B",
+    "order_id": "O_S09",
+    "line_number": 2,
+    "product_id": "P002",
+    "quantity": 2,
+    "unit_list_price": 30,
+    "discount_amount": 0,
+    "unit_cost_snapshot": 15,
+    "import_batch_id": 4
+  }
+]

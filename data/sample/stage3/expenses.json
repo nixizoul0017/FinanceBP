@@ -1,0 +1,62 @@
+[
+  {
+    "expense_id": "E1",
+    "expense_date": "2026-09-30",
+    "department": "D01",
+    "expense_category": "marketing",
+    "channel_code": "C01",
+    "region_code": null,
+    "amount": 100,
+    "source_system": "demo_expenses",
+    "source_reference": "EXP202609-1",
+    "import_batch_id": 6
+  },
+  {
+    "expense_id": "E2",
+    "expense_date": "2026-09-30",
+    "department": "D02",
+    "expense_category": "platform_commission",
+    "channel_code": null,
+    "region_code": null,
+    "amount": 50,
+    "source_system": "demo_expenses",
+    "source_reference": "EXP202609-2",
+    "import_batch_id": 6
+  },
+  {
+    "expense_id": "E3",
+    "expense_date": "2026-09-30",
+    "department": "D03",
+    "expense_category": "logistics",
+    "channel_code": null,
+    "region_code": null,
+    "amount": 30,
+    "source_system": "demo_expenses",
+    "source_reference": "EXP202609-3",
+    "import_batch_id": 6
+  },
+  {
+    "expense_id": "E4",
+    "expense_date": "2026-09-30",
+    "department": "D04",
+    "expense_category": "payroll",
+    "channel_code": null,
+    "region_code": null,
+    "amount": 200,
+    "source_system": "demo_expenses",
+    "source_reference": "EXP202609-4",
+    "import_batch_id": 6
+  },
+  {
+    "expense_id": "E5",
+    "expense_date": "2026-09-30",
+    "department": "D04",
+    "expense_category": "administration",
+    "channel_code": null,
+    "region_code": null,
+    "amount": 20,
+    "source_system": "demo_expenses",
+    "source_reference": "EXP202609-5",
+    "import_batch_id": 6
+  }
+]

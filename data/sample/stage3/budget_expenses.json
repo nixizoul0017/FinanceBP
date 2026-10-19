@@ -1,0 +1,52 @@
+[
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "expense_category": "marketing",
+    "department": "D01",
+    "channel_scope": "C01",
+    "region_scope": "ALL",
+    "budget_amount": 90,
+    "import_batch_id": 8
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "expense_category": "platform_commission",
+    "department": "D02",
+    "channel_scope": "ALL",
+    "region_scope": "ALL",
+    "budget_amount": 45,
+    "import_batch_id": 8
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "expense_category": "logistics",
+    "department": "D03",
+    "channel_scope": "ALL",
+    "region_scope": "ALL",
+    "budget_amount": 35,
+    "import_batch_id": 8
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "expense_category": "payroll",
+    "department": "D04",
+    "channel_scope": "ALL",
+    "region_scope": "ALL",
+    "budget_amount": 190,
+    "import_batch_id": 8
+  },
+  {
+    "budget_version": "B2026_V1",
+    "month": "2026-09-01",
+    "expense_category": "administration",
+    "department": "D04",
+    "channel_scope": "ALL",
+    "region_scope": "ALL",
+    "budget_amount": 20,
+    "import_batch_id": 8
+  }
+]

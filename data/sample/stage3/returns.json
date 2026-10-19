@@ -1,0 +1,57 @@
+[
+  {
+    "return_id": "T_S03",
+    "order_item_id": "I_S03",
+    "refund_date": "2026-09-10",
+    "returned_quantity": 1,
+    "recoverable_quantity": 1,
+    "refund_amount": 110,
+    "cogs_reversal_amount": 70,
+    "reason_code": "return_resalable",
+    "import_batch_id": 5
+  },
+  {
+    "return_id": "T_S05",
+    "order_item_id": "I_S05",
+    "refund_date": "2026-09-10",
+    "returned_quantity": 0,
+    "recoverable_quantity": 0,
+    "refund_amount": 30,
+    "cogs_reversal_amount": 0,
+    "reason_code": "compensation",
+    "import_batch_id": 5
+  },
+  {
+    "return_id": "T_S06_A",
+    "order_item_id": "I_S06",
+    "refund_date": "2026-09-10",
+    "returned_quantity": 1,
+    "recoverable_quantity": 1,
+    "refund_amount": 110,
+    "cogs_reversal_amount": 70,
+    "reason_code": "return_resalable",
+    "import_batch_id": 5
+  },
+  {
+    "return_id": "T_S06_B",
+    "order_item_id": "I_S06",
+    "refund_date": "2026-09-15",
+    "returned_quantity": 1,
+    "recoverable_quantity": 1,
+    "refund_amount": 110,
+    "cogs_reversal_amount": 70,
+    "reason_code": "return_resalable",
+    "import_batch_id": 5
+  },
+  {
+    "return_id": "T_S07",
+    "order_item_id": "I_S07",
+    "refund_date": "2026-09-10",
+    "returned_quantity": 5,
+    "recoverable_quantity": 5,
+    "refund_amount": 550,
+    "cogs_reversal_amount": 350,
+    "reason_code": "return_resalable",
+    "import_batch_id": 5
+  }
+]

@@ -1,0 +1,299 @@
+[
+  {
+    "entity_id": "XCYX",
+    "month": "2024-01-01",
+    "net_revenue": "184907.83",
+    "net_cost": "98532.30",
+    "gross_margin": "86375.53",
+    "expenses": "41823.92",
+    "operating_profit": "44551.61"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-02-01",
+    "net_revenue": "150528.83",
+    "net_cost": "80526.60",
+    "gross_margin": "70002.23",
+    "expenses": "37265.40",
+    "operating_profit": "32736.83"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-03-01",
+    "net_revenue": "203526.97",
+    "net_cost": "109164.53",
+    "gross_margin": "94362.44",
+    "expenses": "45060.46",
+    "operating_profit": "49301.98"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-04-01",
+    "net_revenue": "210646.94",
+    "net_cost": "113284.28",
+    "gross_margin": "97362.66",
+    "expenses": "46455.60",
+    "operating_profit": "50907.06"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-05-01",
+    "net_revenue": "229391.19",
+    "net_cost": "122591.91",
+    "gross_margin": "106799.28",
+    "expenses": "49161.11",
+    "operating_profit": "57638.17"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-06-01",
+    "net_revenue": "290783.40",
+    "net_cost": "155433.64",
+    "gross_margin": "135349.76",
+    "expenses": "57941.32",
+    "operating_profit": "77408.44"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-07-01",
+    "net_revenue": "220884.59",
+    "net_cost": "117807.23",
+    "gross_margin": "103077.36",
+    "expenses": "48059.20",
+    "operating_profit": "55018.16"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-08-01",
+    "net_revenue": "216358.41",
+    "net_cost": "116202.22",
+    "gross_margin": "100156.19",
+    "expenses": "46886.80",
+    "operating_profit": "53269.39"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-09-01",
+    "net_revenue": "238752.40",
+    "net_cost": "127792.05",
+    "gross_margin": "110960.35",
+    "expenses": "50592.11",
+    "operating_profit": "60368.24"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-10-01",
+    "net_revenue": "237008.72",
+    "net_cost": "126462.98",
+    "gross_margin": "110545.74",
+    "expenses": "50637.12",
+    "operating_profit": "59908.62"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-11-01",
+    "net_revenue": "338207.18",
+    "net_cost": "180940.45",
+    "gross_margin": "157266.73",
+    "expenses": "65362.50",
+    "operating_profit": "91904.23"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2024-12-01",
+    "net_revenue": "260766.38",
+    "net_cost": "139532.27",
+    "gross_margin": "121234.11",
+    "expenses": "53967.67",
+    "operating_profit": "67266.44"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-01-01",
+    "net_revenue": "205446.34",
+    "net_cost": "111376.38",
+    "gross_margin": "94069.96",
+    "expenses": "45908.74",
+    "operating_profit": "48161.22"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-02-01",
+    "net_revenue": "171891.24",
+    "net_cost": "93090.09",
+    "gross_margin": "78801.15",
+    "expenses": "41000.27",
+    "operating_profit": "37800.88"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-03-01",
+    "net_revenue": "230863.29",
+    "net_cost": "124022.75",
+    "gross_margin": "106840.54",
+    "expenses": "49375.90",
+    "operating_profit": "57464.64"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-04-01",
+    "net_revenue": "243681.35",
+    "net_cost": "130603.66",
+    "gross_margin": "113077.69",
+    "expenses": "51542.76",
+    "operating_profit": "61534.93"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-05-01",
+    "net_revenue": "259643.87",
+    "net_cost": "139208.39",
+    "gross_margin": "120435.48",
+    "expenses": "53805.50",
+    "operating_profit": "66629.98"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-06-01",
+    "net_revenue": "321546.57",
+    "net_cost": "172821.09",
+    "gross_margin": "148725.48",
+    "expenses": "63321.55",
+    "operating_profit": "85403.93"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-07-01",
+    "net_revenue": "251921.44",
+    "net_cost": "136065.90",
+    "gross_margin": "115855.54",
+    "expenses": "52612.74",
+    "operating_profit": "63242.80"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-08-01",
+    "net_revenue": "245890.84",
+    "net_cost": "131933.53",
+    "gross_margin": "113957.31",
+    "expenses": "51969.67",
+    "operating_profit": "61987.64"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-09-01",
+    "net_revenue": "257888.98",
+    "net_cost": "138619.80",
+    "gross_margin": "119269.18",
+    "expenses": "53718.32",
+    "operating_profit": "65550.86"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-10-01",
+    "net_revenue": "272364.13",
+    "net_cost": "146360.67",
+    "gross_margin": "126003.46",
+    "expenses": "55916.00",
+    "operating_profit": "70087.46"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-11-01",
+    "net_revenue": "399223.80",
+    "net_cost": "214293.66",
+    "gross_margin": "184930.14",
+    "expenses": "74614.43",
+    "operating_profit": "110315.71"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2025-12-01",
+    "net_revenue": "299854.77",
+    "net_cost": "162210.53",
+    "gross_margin": "137644.24",
+    "expenses": "60157.21",
+    "operating_profit": "77487.03"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-01-01",
+    "net_revenue": "234548.06",
+    "net_cost": "126834.02",
+    "gross_margin": "107714.04",
+    "expenses": "50223.98",
+    "operating_profit": "57490.06"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-02-01",
+    "net_revenue": "185415.12",
+    "net_cost": "100726.11",
+    "gross_margin": "84689.01",
+    "expenses": "43429.24",
+    "operating_profit": "41259.77"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-03-01",
+    "net_revenue": "251865.70",
+    "net_cost": "144120.20",
+    "gross_margin": "107745.50",
+    "expenses": "53508.57",
+    "operating_profit": "54236.93"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-04-01",
+    "net_revenue": "259830.92",
+    "net_cost": "146711.76",
+    "gross_margin": "113119.16",
+    "expenses": "54862.07",
+    "operating_profit": "58257.09"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-05-01",
+    "net_revenue": "282992.07",
+    "net_cost": "160810.49",
+    "gross_margin": "122181.58",
+    "expenses": "57808.64",
+    "operating_profit": "64372.94"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-06-01",
+    "net_revenue": "359502.61",
+    "net_cost": "202915.57",
+    "gross_margin": "156587.04",
+    "expenses": "68939.66",
+    "operating_profit": "87647.38"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-07-01",
+    "net_revenue": "246796.68",
+    "net_cost": "153514.18",
+    "gross_margin": "93282.50",
+    "expenses": "57277.41",
+    "operating_profit": "36005.09"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-08-01",
+    "net_revenue": "253507.84",
+    "net_cost": "157627.23",
+    "gross_margin": "95880.61",
+    "expenses": "58116.00",
+    "operating_profit": "37764.61"
+  },
+  {
+    "entity_id": "XCYX",
+    "month": "2026-09-01",
+    "net_revenue": "267927.12",
+    "net_cost": "165822.96",
+    "gross_margin": "102104.16",
+    "expenses": "60504.74",
+    "operating_profit": "41599.42"
+  }
+]

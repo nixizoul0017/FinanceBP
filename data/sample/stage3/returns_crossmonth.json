@@ -1,0 +1,13 @@
+[
+  {
+    "return_id": "T_S04",
+    "order_item_id": "I_S04",
+    "refund_date": "2026-10-05",
+    "returned_quantity": 1,
+    "recoverable_quantity": 1,
+    "refund_amount": 110,
+    "cogs_reversal_amount": 70,
+    "reason_code": "return_resalable",
+    "import_batch_id": 9
+  }
+]

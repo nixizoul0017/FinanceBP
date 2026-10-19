@@ -1,0 +1,26 @@
+[
+  {
+    "product_id": "P001",
+    "product_name": "收纳盒",
+    "category": "STORAGE",
+    "quantity_unit": "件",
+    "active_flag": 1,
+    "import_batch_id": 1
+  },
+  {
+    "product_id": "P002",
+    "product_name": "清洁刷",
+    "category": "CLEANING",
+    "quantity_unit": "件",
+    "active_flag": 1,
+    "import_batch_id": 1
+  },
+  {
+    "product_id": "P003",
+    "product_name": "厨房置物架",
+    "category": "KITCHEN",
+    "quantity_unit": "件",
+    "active_flag": 1,
+    "import_batch_id": 1
+  }
+]

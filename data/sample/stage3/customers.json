@@ -1,0 +1,17 @@
+[
+  {
+    "customer_id": "U0001",
+    "signup_date": "2024-01-01",
+    "import_batch_id": 2
+  },
+  {
+    "customer_id": "U0002",
+    "signup_date": "2024-01-01",
+    "import_batch_id": 2
+  },
+  {
+    "customer_id": "U0003",
+    "signup_date": "2024-01-01",
+    "import_batch_id": 2
+  }
+]

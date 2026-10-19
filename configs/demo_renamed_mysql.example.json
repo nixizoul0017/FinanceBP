@@ -1,0 +1,96 @@
+{
+  "profile_version": 1,
+  "entity_id": "XCYX",
+  "rule_version": "sales_v1",
+  "coverage": {
+    "complete_start": "2024-01-01",
+    "complete_end": "2026-09-30"
+  },
+  "semantics": {
+    "currency": "CNY",
+    "amount_unit": "yuan",
+    "tax_basis": "excluding_tax",
+    "quantity_unit": "件",
+    "sales_basis": "discounted_before_refund",
+    "refund_basis": "separate_positive_events",
+    "cost_basis": "historic_transaction_cost"
+  },
+  "adapter": "mapped_facts_v1",
+  "source": {
+    "kind": "mysql",
+    "connection": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "user": "root",
+      "database": "finance_bp_demo",
+      "password_env": "FINANCE_DB_PASSWORD"
+    }
+  },
+  "tables": {
+    "sales": {
+      "table": "biz_sales",
+      "mapping": {
+        "sale_line_id": "b_sale_line_id",
+        "order_id": "b_order_id",
+        "revenue_date": "b_revenue_date",
+        "product_id": "b_product_id",
+        "channel_id": "b_channel_id",
+        "region_id": "b_region_id",
+        "quantity": "b_quantity",
+        "sales_amount_before_refund": "b_sales_amount_before_refund",
+        "cogs_amount": "b_cogs_amount"
+      }
+    },
+    "refunds": {
+      "table": "biz_refunds",
+      "mapping": {
+        "refund_id": "b_refund_id",
+        "sale_line_id": "b_sale_line_id",
+        "refund_date": "b_refund_date",
+        "returned_quantity": "b_returned_quantity",
+        "recoverable_quantity": "b_recoverable_quantity",
+        "refund_amount": "b_refund_amount",
+        "cost_reversal_amount": "b_cost_reversal_amount"
+      }
+    },
+    "expenses": {
+      "table": "biz_expenses",
+      "mapping": {
+        "expense_id": "b_expense_id",
+        "expense_date": "b_expense_date",
+        "expense_category": "b_expense_category",
+        "department": "b_department",
+        "channel_scope": "b_channel_scope",
+        "region_scope": "b_region_scope",
+        "amount": "b_amount"
+      }
+    },
+    "sales_budget": {
+      "table": "biz_sales_budget",
+      "mapping": {
+        "budget_version": "b_budget_version",
+        "month": "b_month",
+        "product_id": "b_product_id",
+        "channel_id": "b_channel_id",
+        "region_id": "b_region_id",
+        "quantity": "b_quantity",
+        "net_unit_price": "b_net_unit_price",
+        "unit_cost": "b_unit_cost",
+        "refund_amount": "b_refund_amount",
+        "cost_reversal_amount": "b_cost_reversal_amount"
+      }
+    },
+    "expense_budget": {
+      "table": "biz_expense_budget",
+      "mapping": {
+        "budget_version": "b_budget_version",
+        "month": "b_month",
+        "expense_category": "b_expense_category",
+        "department": "b_department",
+        "channel_scope": "b_channel_scope",
+        "region_scope": "b_region_scope",
+        "amount": "b_amount"
+      }
+    }
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "profile_version": 2,
+  "profile_id": "multidimensional-demo",
+  "display_name": "星辰优选 · 多维经营",
+  "entity_id": "MULTI_DEMO",
+  "rule_version": "sales_v1",
+  "coverage": {
+    "complete_start": "2025-01-01",
+    "complete_end": "2026-09-30"
+  },
+  "semantics": {
+    "currency": "CNY",
+    "amount_unit": "yuan",
+    "tax_basis": "excluding_tax",
+    "quantity_unit": "件",
+    "sales_basis": "discounted_before_refund",
+    "refund_basis": "separate_positive_events",
+    "cost_basis": "historic_transaction_cost"
+  },
+  "adapter": "mapped_facts_v1",
+  "source": {
+    "kind": "files"
+  },
+  "tables": {
+    "sales": {
+      "files": [
+        "data/demo/multidimensional/sales.csv"
+      ]
+    },
+    "refunds": {
+      "files": [
+        "data/demo/multidimensional/refunds.csv"
+      ]
+    },
+    "expenses": {
+      "files": [
+        "data/demo/multidimensional/expenses.csv"
+      ]
+    },
+    "sales_budget": {
+      "files": [
+        "data/demo/multidimensional/sales_budget.csv"
+      ]
+    },
+    "expense_budget": {
+      "files": [
+        "data/demo/multidimensional/expense_budget.csv"
+      ]
+    },
+    "employees": {
+      "files": [
+        "data/demo/multidimensional/employees.csv"
+      ]
+    }
+  },
+  "lookup_tables": [
+    "employees"
+  ],
+  "dimensions": [
+    {
+      "id": "sales_department_id",
+      "label": "销售部门",
+      "bindings": {
+        "sales": {
+          "table": "sales",
+          "field": "sales_department"
+        },
+        "sales_budget": {
+          "table": "sales_budget",
+          "field": "sales_department",
+          "versions": [
+            "B2026_TEAM"
+          ]
+        }
+      }
+    },
+    {
+      "id": "salesperson_id",
+      "label": "销售员",
+      "bindings": {
+        "sales": {
+          "table": "sales",
+          "field": "employee_id",
+          "lookup": {
+            "table": "employees",
+            "key": "employee_id",
+            "name_field": "employee_name"
+          }
+        },
+        "sales_budget": {
+          "table": "sales_budget",
+          "field": "employee_id",
+          "versions": [
+            "B2026_TEAM"
+          ]
+        }
+      }
+    },
+    {
+      "id": "store_id",
+      "label": "门店",
+      "bindings": {
+        "sales": {
+          "table": "sales",
+          "field": "store_code"
+        }
+      }
+    },
+    {
+      "id": "customer_type",
+      "label": "客户类型",
+      "bindings": {
+        "sales": {
+          "table": "sales",
+          "field": "customer_segment"
+        }
+      }
+    }
+  ],
+  "forecast_dimensions": [
+    "product_id",
+    "channel_id",
+    "region_id",
+    "sales_department_id",
+    "salesperson_id",
+    "store_id"
+  ]
+}

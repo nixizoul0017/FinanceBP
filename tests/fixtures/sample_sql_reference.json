@@ -1,0 +1,73 @@
+{
+  "company": {
+    "expenses": 400.0,
+    "net_cost": 2055.0,
+    "net_revenue": 3240.0,
+    "gross_margin": 1185.0,
+    "confirmed_orders": 8,
+    "operating_profit": 785.0
+  },
+  "dataset": "stage3_sample_v1",
+  "regions": [
+    {
+      "net_revenue": 2390.0,
+      "region_code": "R01",
+      "gross_margin": 850.0
+    },
+    {
+      "net_revenue": 610.0,
+      "region_code": "R02",
+      "gross_margin": 230.0
+    },
+    {
+      "net_revenue": 240.0,
+      "region_code": "R03",
+      "gross_margin": 105.0
+    }
+  ],
+  "channels": [
+    {
+      "net_revenue": 2390.0,
+      "channel_code": "C01",
+      "gross_margin": 850.0
+    },
+    {
+      "net_revenue": 610.0,
+      "channel_code": "C02",
+      "gross_margin": 230.0
+    },
+    {
+      "net_revenue": 240.0,
+      "channel_code": "C03",
+      "gross_margin": 105.0
+    }
+  ],
+  "products": [
+    {
+      "net_cost": 1890.0,
+      "product_id": "P001",
+      "net_revenue": 2940.0,
+      "gross_margin": 1050.0
+    },
+    {
+      "net_cost": 30.0,
+      "product_id": "P002",
+      "net_revenue": 60.0,
+      "gross_margin": 30.0
+    },
+    {
+      "net_cost": 135.0,
+      "product_id": "P003",
+      "net_revenue": 240.0,
+      "gross_margin": 105.0
+    }
+  ],
+  "sales_budget": {
+    "version": "B2026_V1",
+    "net_cost": 2100.0,
+    "net_revenue": 3380.0,
+    "gross_margin": 1280.0
+  },
+  "analysis_month": "2026-09-01",
+  "expenses_budget": 380.0
+}

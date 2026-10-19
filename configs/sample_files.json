@@ -1,0 +1,66 @@
+{
+  "profile_version": 1,
+  "entity_id": "XCYX_SAMPLE",
+  "rule_version": "sales_v1",
+  "coverage": {
+    "complete_start": "2026-09-01",
+    "complete_end": "2026-09-30",
+    "boundary_event_end": "2026-10-05"
+  },
+  "semantics": {
+    "currency": "CNY",
+    "amount_unit": "yuan",
+    "tax_basis": "excluding_tax",
+    "quantity_unit": "件",
+    "sales_basis": "discounted_before_refund",
+    "refund_basis": "separate_positive_events",
+    "cost_basis": "historic_transaction_cost"
+  },
+  "adapter": "ecommerce_v1",
+  "source": {
+    "kind": "files"
+  },
+  "tables": {
+    "products": {
+      "files": [
+        "data/sample/stage3/products.json"
+      ]
+    },
+    "customers": {
+      "files": [
+        "data/sample/stage3/customers.json"
+      ]
+    },
+    "orders": {
+      "files": [
+        "data/sample/stage3/orders.json"
+      ]
+    },
+    "order_items": {
+      "files": [
+        "data/sample/stage3/order_items.json"
+      ]
+    },
+    "returns": {
+      "files": [
+        "data/sample/stage3/returns.json",
+        "data/sample/stage3/returns_crossmonth.json"
+      ]
+    },
+    "expenses": {
+      "files": [
+        "data/sample/stage3/expenses.json"
+      ]
+    },
+    "budget_sales": {
+      "files": [
+        "data/sample/stage3/budget_sales.json"
+      ]
+    },
+    "budget_expenses": {
+      "files": [
+        "data/sample/stage3/budget_expenses.json"
+      ]
+    }
+  }
+}
