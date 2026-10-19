@@ -2,3 +2,5 @@ START.command text eol=lf
 *.py text eol=lf
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+# Demo manifests hash the original bytes; preserve CSV BOMs and record endings.
+data/** -text
