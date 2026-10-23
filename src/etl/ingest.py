@@ -12,17 +12,9 @@ from .common import ROOT, digest, read_json, write_json
 from .validation import Catalog, KEYS, SCHEMAS, parse_row, process_rows
 
 
-def read_rows(path):
-    path = Path(path)
-    if path.suffix.lower() == ".json":
-        rows = read_json(path)
-        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
-            raise ValueError("expected_list_of_records")
-        return rows
-    if path.suffix.lower() == ".csv":
-        # 先读取文本，防止商品编码前导零、空字符串或金额被提前转成浮点。
-        return pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8-sig").to_dict("records")
-    raise ValueError("unsupported_file_format")
+def read_rows(path, **options):
+    from .file_tables import read_table
+    return read_table(path, **options).rows
 
 
 def load_catalog(connection):

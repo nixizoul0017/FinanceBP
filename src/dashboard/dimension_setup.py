@@ -8,6 +8,50 @@ import streamlit as st
 from etl.dimensions import BUILTINS, validate_dimensions
 
 
+def header_selector(draft,candidates,password,confirm):
+    existing=draft.get('dimensions',[])
+    data=[]
+    for item in candidates:
+        prior=next((spec for spec in existing if spec['bindings']['sales']['table']==item['table'] and spec['bindings']['sales']['field']==item['field']),None)
+        builtin=item.get('builtin_id')
+        enabled=(builtin in draft.get('visible_dimensions',list(BUILTINS))) if builtin else bool(prior)
+        label=draft.get('dimension_labels',{}).get(builtin,BUILTINS.get(builtin)) if builtin else (prior or {}).get('label',item['field'])
+        data.append({'启用':enabled,'来源表':item['table'],'原表头':item['field'],'分类名称':label,'类型':item.get('type','unknown')})
+    if not data:return
+    st.markdown('**全部表头 · 勾选启用，直接改名**')
+    edited=st.data_editor(pd.DataFrame(data),hide_index=True,width='stretch',height=min(480,75+35*len(data)),
+                          disabled=['来源表','原表头','类型'],key='dimension_header_grid',
+                          column_config={'启用':st.column_config.CheckboxColumn('启用'),
+                                         '分类名称':st.column_config.TextColumn('分类名称',required=True)})
+    st.caption('金额、日期、编号也可以作为分类；勾选分类不会改变其财务含义。独立表的销售归属仍需在高级设置确认关联键。')
+    if st.button('确认所选分类',key='dimension_headers_apply',type='primary',width='stretch'):
+        candidate=deepcopy(draft);specs=[];visible=[];labels={};used=set(BUILTINS);used_labels=set()
+        try:
+            for row,item in zip(edited.to_dict('records'),candidates):
+                if not row['启用']:continue
+                label=str(row.get('分类名称') or '').strip()
+                if not label or label.casefold() in used_labels:raise ValueError('启用的分类名称不能为空或重复。')
+                used_labels.add(label.casefold())
+                if item.get('builtin_id'):
+                    identifier=item['builtin_id']
+                    if identifier in visible:raise ValueError('同一个基础分类只能启用一次。')
+                    labels[identifier]=label;visible.append(identifier);continue
+                old=next((spec for spec in existing if spec['bindings']['sales']['table']==item['table'] and spec['bindings']['sales']['field']==item['field']),None)
+                spec=deepcopy(old) if old else {'id':item['id'],'label':label,'bindings':{'sales':{'table':item['table'],'field':item['field'],'raw_fields':True}}}
+                identifier=spec['id']
+                if identifier in used:identifier='dim_'+hashlib.sha256((item['table']+':'+item['field']).encode()).hexdigest()[:12]
+                spec.update(id=identifier,label=label);used.add(identifier);visible.append(identifier);specs.append(spec)
+            candidate.update(profile_version=2,dimensions=specs,dimension_labels=labels,visible_dimensions=visible)
+            candidate['forecast_dimensions']=[field for field in draft.get('forecast_dimensions',list(BUILTINS)) if field in used]
+            validate_dimensions(candidate)
+            with st.spinner('正在验证分类和原财务金额…'):confirm(candidate,password)
+            st.session_state['dimension_setup_open']=False
+            st.session_state['clear_dimension_password_next']=True
+            st.rerun()
+        except ValueError as error:st.error('分类未保存：'+str(error))
+        except Exception:st.error('分类验证失败，请检查来源和关联设置；原分类保留。')
+
+
 def render_setup(profile, scan, confirm):
     if not st.session_state.get('dimension_setup_open'):
         return
@@ -20,6 +64,9 @@ def render_setup(profile, scan, confirm):
             st.session_state['dimension_setup_open']=False
             st.rerun()
         st.caption('只检查配置中的业务表。分类推荐不是业务含义的确认；销售部门与费用部门分别处理。')
+        if draft.get('import_files') and st.button('修改文件工作表 / 表头行',key='dimension_edit_header_row'):
+            from dashboard.column_catalog_ui import edit_catalog
+            edit_catalog(True)
         password=st.text_input('分类识别连接密码（仅本次验证）',type='password',key='dimension_setup_password') if draft['source']['kind']=='mysql' else None
         if st.button('扫描字段 / 重新识别',key='dimension_scan',type='primary'):
             try:
@@ -54,8 +101,12 @@ def render_setup(profile, scan, confirm):
         candidates=preview['candidates']
         st.markdown(f'**发现{len(candidates)}个候选字段 · 当前已确认{len(BUILTINS)+len(draft.get("dimensions",[]))}个分类维度**')
         if candidates:
-            st.dataframe(pd.DataFrame([{'来源表':x['table'],'字段':x['field'],'建议名称':x['label'],'字段类型':x.get('type','unknown'),'建议启用':'是' if x['recommended'] else '手动确认',
+            with st.expander('查看字段类型、样例与缺失情况'):
+                st.dataframe(pd.DataFrame([{'来源表':x['table'],'字段':x['field'],'建议名称':x['label'],'字段类型':x.get('type','unknown'),'建议启用':'是' if x['recommended'] else '手动确认',
                                        '样例（最多5个）':'、'.join(x['sample_values']),'样本缺失率':f"{x['missing_rate']:.1%}",'字段注释':x.get('comment','')} for x in candidates]),hide_index=True,width='stretch')
+        header_selector(draft,candidates,password,confirm)
+        if not st.toggle('高级：关联、预算及细分预测设置',key='dimension_advanced'):
+            return
         options=[x['table']+'.'+x['field'] for x in candidates]
         candidate_map=dict(zip(options,candidates))
         chosen=st.multiselect('选择准备启用的候选分类',options,format_func=lambda key:candidate_map[key]['label']+' · '+key,key='dimension_candidates',placeholder='选择后在下方确认映射')

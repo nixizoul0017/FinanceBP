@@ -200,6 +200,8 @@ button:focus-visible,input:focus-visible,select:focus-visible {outline-color:var
 /* Only explicit navigation, applied changes or source reads activate this overlay. */
 .fb-loading {display:none;position:fixed;inset:0 0 0 260px;z-index:99990;background:color-mix(in srgb,var(--fb-background) 87%,transparent);backdrop-filter:blur(3px);align-items:center;justify-content:center;pointer-events:auto;}
 .fb-loading[data-active="true"] {display:flex;animation:loading-in .12s ease-out;}
+/* A completed or stopped script must never leave an input-blocking overlay. */
+[data-testid="stApp"]:not([data-test-script-state="running"]) .fb-loading {display:none;}
 .loading-card {display:flex;align-items:center;flex-direction:column;gap:16px;padding:34px 48px;background:var(--fb-surface);border:1px solid var(--fb-border);border-radius:18px;box-shadow:0 18px 70px #152d4220;color:var(--fb-muted);font-size:13px;}
 .loading-card strong {color:var(--fb-text);font-size:23px;}
 .loading-ring {width:34px;height:34px;border:3px solid var(--fb-border);border-top-color:var(--fb-primary);border-radius:50%;animation:loading-spin .75s linear infinite;}

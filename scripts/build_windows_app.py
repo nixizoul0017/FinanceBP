@@ -12,17 +12,20 @@ ROOT=Path(__file__).resolve().parents[1]
 BUILD=ROOT/'outputs/desktop_build'
 
 
-def build(skip_freeze=False,incremental=False):
+def build(skip_freeze=False,incremental=False,bundle_dir=None):
     if sys.platform!='win32' or sys.version_info[:2]!=(3,13) or platform.machine().upper() not in ('AMD64','X86_64'):
         raise RuntimeError('Build requires Windows x64 and Python 3.13')
     version=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
+    bundle_output=Path(bundle_dir).resolve() if bundle_dir else ROOT/'dist/windows'
+    if not bundle_output.is_relative_to((ROOT/'dist').resolve()):
+        raise ValueError('Frozen bundle directory must stay under the project dist folder')
     from package_project import release_files
     public=release_files()
     resources=BUILD/'resources'
     resources.mkdir(parents=True,exist_ok=True)
     datas=[]
     include={'app.py','VERSION','.streamlit/config.toml','docs/assets/financebp.ico','docs/USER_GUIDE.md','docs/WINDOWS_APP.md',
-             'tests/fixtures/report_reference.json'}
+             'tests/fixtures/report_reference.json','tests/fixtures/business_import_legacy.xls','docs/FILE_IMPORT.md','docs/HEADER_CATALOG.md'}
     for path in public:
         name=path.relative_to(ROOT).as_posix()
         if name in include or name.startswith(('src/','data/demo/','data/sample/','configs/')):
@@ -46,14 +49,14 @@ def build(skip_freeze=False,incremental=False):
     datas.append((str(licenses),'resources/third_party'))
     import PyInstaller.__main__
     from PyInstaller.utils.hooks import collect_submodules
-    hidden=[]
+    hidden=['xlrd','pandas.io.stata']
     sys.path.insert(0,str(ROOT/'src'))
     for package in ('analysis','dashboard','desktop','etl','finance','reporting','uvicorn','starlette','anyio'):
         hidden.extend(collect_submodules(package))
     # app.py is executed by Streamlit from bundled source, not imported by the entry.
     args=[str(ROOT/'scripts/windows_app.py'),'--name=FinanceBP','--onedir','--windowed','--noconfirm',
           '--icon='+str(ROOT/'docs/assets/financebp.ico'),'--paths='+str(ROOT/'src'),
-          '--distpath='+str(ROOT/'dist/windows'),'--workpath='+str(BUILD/'work'),'--specpath='+str(BUILD),
+          '--distpath='+str(bundle_output),'--workpath='+str(BUILD/'work'),'--specpath='+str(BUILD),
           '--exclude-module=pytest','--exclude-module=tkinter','--exclude-module=matplotlib',
           '--exclude-module=PyQt5','--exclude-module=PyQt6','--exclude-module=PySide6']
     if not incremental: args.append('--clean')
@@ -61,15 +64,15 @@ def build(skip_freeze=False,incremental=False):
     for name in sorted(set(hidden)): args+=['--hidden-import='+name]
     for package in ('streamlit','webview','pythonnet','clr_loader','plotly'):
         args+=['--collect-all='+package]
-    for package in ('pyinstaller','pandas','numpy','openpyxl','PyMySQL','pywebview','streamlit','altair','jsonschema','referencing','uvicorn','starlette','anyio'):
+    for package in ('pyinstaller','pandas','numpy','openpyxl','xlrd','PyMySQL','pywebview','streamlit','altair','jsonschema','referencing','uvicorn','starlette','anyio'):
         args+=['--copy-metadata='+package]
     if not skip_freeze: PyInstaller.__main__.run(args)
-    executable=ROOT/'dist/windows/FinanceBP/FinanceBP.exe'
+    executable=bundle_output/'FinanceBP/FinanceBP.exe'
     if not executable.is_file(): raise RuntimeError('Frozen executable missing')
     compiler=BUILD/'tools/InnoSetup/ISCC.exe'
     runtime=BUILD/'tools/MicrosoftEdgeWebView2RuntimeInstallerX64.exe'
     if not compiler.is_file() or not runtime.is_file(): raise RuntimeError('Inno Setup compiler or offline WebView2 installer missing')
-    subprocess.run([str(compiler),'/DAppVersion='+version,'/DProjectRoot='+str(ROOT),str(ROOT/'scripts/windows_installer.iss')],check=True)
+    subprocess.run([str(compiler),'/DAppVersion='+version,'/DProjectRoot='+str(ROOT),'/DAppBundleDir='+str(executable.parent),str(ROOT/'scripts/windows_installer.iss')],check=True)
     setup=ROOT/'dist'/f'FinanceBP-{version}-windows-x64-setup.exe'
     digest=hashlib.sha256(setup.read_bytes()).hexdigest()
     (setup.parent/(setup.name+'.sha256')).write_text(digest+'  '+setup.name+'\n',encoding='utf-8')
@@ -84,5 +87,6 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--skip-freeze',action='store_true')
     parser.add_argument('--incremental',action='store_true')
+    parser.add_argument('--bundle-dir',help='Build into a separate directory under dist if an older bundle is running')
     options=parser.parse_args()
-    build(options.skip_freeze,options.incremental)
+    build(options.skip_freeze,options.incremental,options.bundle_dir)

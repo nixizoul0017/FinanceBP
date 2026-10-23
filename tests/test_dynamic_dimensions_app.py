@@ -151,6 +151,7 @@ class DynamicDimensionAppTests(unittest.TestCase):
         app=self.start()
         app.button('open_dimension_setup').click().run()
         self.clean(app)
+        app.toggle('dimension_advanced').set_value(True).run()
         self.assertEqual(app.text_input('dimension_mapping_1_label').value,'销售员')
         app.text_input('dimension_mapping_1_label').set_value('客户经理').run()
         next(x for x in app.button if x.label=='确认分类并验证数据').click().run()

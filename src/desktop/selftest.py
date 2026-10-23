@@ -55,6 +55,33 @@ def run(paths,mysql_port=None):
     check('budget_excel_roundtrip',parsed['sales'][0]['budget_net_revenue']==Decimal(3380))
     (evidence/'预算模板.xlsx').write_bytes(payload)
     with tempfile.TemporaryDirectory() as temporary:
+        from etl.file_tables import read_table
+        from etl.file_import import build_profile, suggest_mapping
+        import pandas as pd
+        from openpyxl import Workbook
+        business=Path(temporary)/'中文业务.xlsx'
+        book=Workbook();sheet=book.active;sheet.title='销售'
+        sheet.append(['明细编号','订单号','销售日期','数量','销售金额','销售成本'])
+        sheet.append(['0001','0001','2026-09-03',2,300,100]);book.save(business);book.close()
+        table=read_table(business,sheet_name='销售')
+        imported=build_profile('SELFTEST','文件导入自检','2026-09','2026-09',{
+            'sales':{'reference':{'path':str(business),'name':business.name,'sheet_name':'销售'},'mapping':suggest_mapping('sales',table.columns)},
+            'refunds':{'empty':True}})
+        check('business_xlsx_net_revenue_300',FinancialEngine(load_facts(imported)).summary('2026-09')['net_revenue']==Decimal(300))
+        stata=Path(temporary)/'业务.dta'
+        pd.DataFrame({'staff':[7],'day':pd.to_datetime(['2026-09-03']),'amount':[135.25]}).to_stata(stata,write_index=False,version=118,convert_dates={'day':'td'},variable_labels={'staff':'销售员'})
+        table=read_table(stata)
+        check('business_dta_dates_codes_and_labels',table.rows[0]=={'staff':7,'day':'2026-09-03','amount':135.25} and table.comments['staff']=='销售员')
+        legacy=read_table(paths.resources/'tests/fixtures/business_import_legacy.xls')
+        check('business_legacy_xls_bundled_reader',legacy.rows[0]['员工编号']=='0007' and legacy.rows[0]['销售金额']==135.25)
+        from etl.column_catalog import build_catalog, column_id, file_tables, summarize
+        catalog=build_catalog('SELFTEST','表头分类',[
+            {'reference':{'name':business.name,'path':str(business),'sheet_name':'销售','label':'销售'},
+             'columns':[{'field':field,'label':'自定义'+field,'enabled':True} for field in read_table(business,sheet_name='销售').columns]}])
+        table_id=next(iter(catalog['tables']))
+        _,grouped=summarize(file_tables(catalog)[table_id],catalog['tables'][table_id],[column_id(table_id,'销售金额'),column_id(table_id,'销售日期')])
+        check('header_catalog_amount_date_count',list(grouped)==['自定义销售金额','自定义销售日期','记录数'] and grouped['记录数'].sum()==1)
+        check('header_catalog_no_invented_financial_semantics','semantics' not in catalog and 'coverage' not in catalog)
         root=Path(temporary)/'个人数据'
         store=WorkspaceStore(root/'runtime/finance_workspace.sqlite3')
         row=store.save_budget('selftest','诊断预算','original',parsed,'诊断')
@@ -88,6 +115,6 @@ def run(paths,mysql_port=None):
         finally: connection.dispose()
     return {'passed':True,'version':(paths.resources/'VERSION').read_text().strip(),'python':platform.python_version(),
             'platform':platform.platform(),'checks':checks,'report_id':report['report_id'],'mysql':mysql,
-            'packages':{name:importlib.metadata.version(name) for name in ('streamlit','pandas','numpy','openpyxl','PyMySQL','pywebview','pyinstaller')},
+            'packages':{name:importlib.metadata.version(name) for name in ('streamlit','pandas','numpy','openpyxl','xlrd','PyMySQL','pywebview','pyinstaller')},
             'elapsed_seconds':round(time.perf_counter()-started,3),'created_at':datetime.now().isoformat(),
             'excel_sha256':hashlib.sha256(excel).hexdigest()}

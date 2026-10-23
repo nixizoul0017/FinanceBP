@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from .common import ZERO
+from .dates import parse_business_date
 
 # 字符串类型带最大长度；金额带小数位数。必须先解析，再执行跨表业务校验。
 SCHEMAS = {
@@ -46,7 +47,7 @@ def parse_row(table, raw):
             continue
         try:
             if kind == "d":
-                value = value if type(value) is date else date.fromisoformat(str(value))
+                value = parse_business_date(value,field=field,allow_month=field=='month')
             elif kind == "i":
                 number = Decimal(str(value))
                 require(number.is_finite() and number == number.to_integral_value() and abs(number) <= 2147483647, f"invalid_integer:{field}")

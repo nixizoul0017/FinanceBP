@@ -130,6 +130,7 @@ class FinancialEngine:
         self.entity_id = self.metadata["entity_id"]
         self.registry = deepcopy(self.metadata.get('dimension_registry', [{'id':field,'label':label,'names':{}} for field,label in BUILTINS.items()]))
         self.dimension_ids = tuple(entry['id'] for entry in self.registry)
+        self.selectable_dimension_ids = tuple(self.metadata.get('visible_dimensions',self.dimension_ids))
         self.dimension_labels = {entry['id']:entry['label'] for entry in self.registry}
         if self.metadata.get("rule_version") != "sales_v1":
             raise ValueError("财务模块只支持已验证的sales_v1口径")

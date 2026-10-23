@@ -5,13 +5,14 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 import pandas as pd
 from sqlalchemy import text
 
 from .common import ZERO, db_engine, digest, project_path, read_json
 from .ingest import read_rows
+from .dates import parse_business_date
 from .validation import Catalog, SCHEMAS, process_rows, require
 from .dimensions import attach_dimensions, validate_dimensions, recommend
 
@@ -41,6 +42,10 @@ class Facts:
 
 
 def validate_profile(profile):
+    if profile.get('adapter')=='column_catalog_v1':
+        from .column_catalog import validate_catalog
+        validate_catalog(profile)
+        return
     require(profile.get("profile_version") in (1, 2), "unsupported_profile_version")
     if profile.get("profile_version") == 2:
         validate_dimensions(profile)
@@ -71,13 +76,12 @@ def read_source_tables(profile, engine=None, *, raw_records=None, sample_limit=N
             records[name] = []
             for path_value in paths:
                 path = project_path(path_value)
-                from itertools import islice
-                rows = read_rows(path)
-                if column_comments is not None and path.suffix.lower()=='.csv':
-                    import csv
-                    with path.open(encoding='utf-8-sig',newline='') as stream:
-                        column_comments.setdefault(name,{}).update({field:'' for field in (next(csv.reader(stream),[]))})
-                records[name].extend(islice(rows, sample_limit) if sample_limit else rows)
+                from .file_tables import read_table
+                options={key:setting[key] for key in ('sheet_name','header_row','encoding') if key in setting}
+                table=read_table(path,limit=sample_limit,**options)
+                if column_comments is not None:
+                    column_comments.setdefault(name,{}).update({field:table.comments.get(field,'') for field in table.columns})
+                records[name].extend(table.rows)
                 fingerprints.append({"dataset": name, "file": path.name, "sha256": digest(path)})
     elif source["kind"] == "mysql":
         own_engine = engine is None
@@ -117,6 +121,21 @@ def read_source_tables(profile, engine=None, *, raw_records=None, sample_limit=N
         if setting.get("mapping"):
             mapping = setting["mapping"]
             records[name] = [{field: row.get(original) for field, original in mapping.items()} for row in records[name]]
+        for row in records[name]:
+            for field,value in setting.get('defaults',{}).items():
+                if row.get(field) in (None,''):
+                    row[field]=value
+            for field in DATE_FIELDS:
+                value=row.get(field)
+                if value not in (None,''):
+                    row[field]=parse_business_date(value,field=field,allow_month=field=='month').isoformat()
+            if setting.get('money_rounding')=='half_up':
+                for field in MONEY_FIELDS:
+                    if row.get(field) not in (None,''):
+                        scale=4 if field in ('net_unit_price','unit_cost') else 2
+                        value=Decimal(str(row[field]))
+                        require(value.is_finite(),f'invalid_amount:{field}')
+                        row[field]=value.quantize(Decimal(10)**-scale,rounding=ROUND_HALF_UP)
         for field, values in setting.get("value_maps", {}).items():
             for row in records[name]:
                 if row.get(field) is not None:
@@ -162,7 +181,7 @@ def normalize_mapped(records, entity):
                     require(field in {"cogs_amount", "unit_cost"}, f"missing_standard_field:{name}.{field}")
                     row[field] = None
                 elif field in DATE_FIELDS:
-                    row[field] = value if type(value) is date else date.fromisoformat(str(value))
+                    row[field] = parse_business_date(value,field=field,allow_month=field=='month')
                 elif field in INTEGER_FIELDS:
                     number = Decimal(str(value))
                     require(number.is_finite() and number == number.to_integral_value(), f"invalid_integer:{field}")
@@ -241,6 +260,9 @@ def load_facts(profile_or_path, engine=None):
     identity = hashlib.sha256(json.dumps({"profile": profile, "sources": fingerprints, "snapshot_hash": snapshot_hash}, sort_keys=True, default=str).encode()).hexdigest()
     from .controls import source_controls
     dimension_metadata['source_controls'] = source_controls(records, adapter)
+    days=[row[field] for name,field in (('sales','revenue_date'),('refunds','refund_date'),('expenses','expense_date')) for row in tables[name]]
+    dimension_metadata['observed_date_range']={'start':min(days).isoformat(),'end':max(days).isoformat()} if days else None
+    dimension_metadata['quantity_basis']=profile.get('tables',{}).get('sales',{}).get('quantity_basis','source_column')
     return Facts(frames, {**dimension_metadata, "entity_id": profile["entity_id"], "rule_version": profile["rule_version"], "coverage": profile["coverage"], "semantics": profile["semantics"], "source_fingerprint": identity, "snapshot_hash": snapshot_hash, "sources": fingerprints, "row_counts": {name: len(rows) for name, rows in tables.items()}, "data_availability": availability, "capabilities": {"revenue": availability["sales"] and availability["refunds"], "margin": costs_available and availability["refunds"], "budget": bool(tables["sales_budget"]), "company_profit": costs_available and availability["refunds"] and availability["expenses"]}})
 
 
@@ -252,7 +274,7 @@ def inspect_profile(profile, engine=None):
     fields={name:sorted({key for row in rows for key in row} | set(comments.get(name,{})) | set(profile['tables'][name].get('mapping',{}).values())) for name,rows in raw.items()}
     for name, rows in raw.items():
         types.setdefault(name,{field:next((type(row[field]).__name__ for row in rows if row.get(field) not in (None,'')), 'unknown') for field in fields[name]})
-    candidates=recommend(profile, raw, comments)
+    candidates=recommend(profile, raw, comments,all_fields=True)
     for item in candidates:
         item['type']=types.get(item['table'],{}).get(item['field'],'unknown')
     versions=sorted({str(row.get(profile['tables'][name].get('mapping',{}).get('budget_version','budget_version'))) for name in ('sales_budget','budget_sales') for row in raw.get(name,[]) if row.get(profile['tables'][name].get('mapping',{}).get('budget_version','budget_version'))})

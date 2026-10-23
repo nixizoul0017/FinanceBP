@@ -174,10 +174,12 @@ class DimensionImportTests(unittest.TestCase):
         config['dimensions']=[]
         config.pop('forecast_dimensions')
         scan=inspect_profile(config)
-        employees=[x for x in scan['candidates'] if x['field']=='employee_id']
+        employees=[x for x in scan['candidates'] if x['field']=='employee_id' and x['table']=='sales']
         self.assertEqual(len(employees),1)
         self.assertTrue(employees[0]['recommended'])
-        self.assertTrue(all('amount' not in item['field'] for item in scan['candidates']))
+        amounts=[item for item in scan['candidates'] if 'amount' in item['field']]
+        self.assertTrue(amounts)
+        self.assertTrue(all(not item['recommended'] for item in amounts))
         self.assertIn('type',employees[0])
         self.assertIn('employee_name',scan['fields']['employees'])
         raw={'sales':[{'员工编码':101,'自定义类型':'A','销售金额':100,'日期':'2026-01-01'}]}

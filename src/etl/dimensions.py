@@ -71,10 +71,16 @@ def validate_dimensions(profile):
     forecast = profile.get("forecast_dimensions", [*BUILTINS, *(x["id"] for x in dimensions)])
     if len(forecast) != len(set(forecast)) or not set(BUILTINS).issubset(forecast) or not set(forecast).issubset(seen):
         raise ValueError("预测建模维度配置无效")
+    for key,label in profile.get('dimension_labels',{}).items():
+        if key not in BUILTINS or not isinstance(label,str) or not label.strip():
+            raise ValueError('基础分类显示名称无效')
+    visible=profile.get('visible_dimensions')
+    if visible is not None and (not isinstance(visible,list) or len(visible)!=len(set(visible)) or not set(visible)<=seen):
+        raise ValueError('启用的分类列表无效')
 
 
 def canonical_records(profile, raw):
-    return {name: [{**row, **{key: row.get(field) for key, field in profile["tables"][name].get("mapping", {}).items()}}
+    return {name: [{**row, **{key: row.get(field) for key, field in profile["tables"][name].get("mapping", {}).items()},'__original_fields__':row}
                    for row in rows] for name, rows in raw.items()}
 
 
@@ -118,8 +124,9 @@ def _resolve(profile, raw, standard, binding, target):
     indexed_lookup = _index(raw.get(lookup["table"], []), lookup["key"]) if lookup else None
     values, names = [], {}
     for row in selected:
-        value = row.get(binding["field"])
-        name = row.get(binding.get("name_field", ""))
+        values_row=row.get('__original_fields__',row) if binding.get('raw_fields') else row
+        value = values_row.get(binding["field"])
+        name = values_row.get(binding.get("name_field", ""))
         if lookup:
             match = indexed_lookup.get(code(value), {})
             if lookup.get("value_field"):
@@ -137,7 +144,7 @@ def attach_dimensions(profile, raw, tables):
     """One scalar per fact and dimension. Refunds inherit sales later in the engine."""
     before=[(row['sale_line_id'],row['sales_amount_before_refund'],row['cogs_amount']) for row in tables['sales']]
     raw = canonical_records(profile, raw)
-    registry = [{"id": key, "label": label, "names": {}} for key, label in BUILTINS.items()]
+    registry = [{"id": key, "label": profile.get('dimension_labels',{}).get(key,label), "names": {}} for key, label in BUILTINS.items()]
     versions = sorted({row["budget_version"] for row in tables["sales_budget"]})
     budget_dimensions = {version: list(BUILTINS) for version in versions}
     for spec in profile.get("dimensions", []):
@@ -159,35 +166,42 @@ def attach_dimensions(profile, raw, tables):
         raise ValueError('分类关联改变了销售行数或金额')
     return {"join_validation":{"sales_rows_before":len(before),"sales_rows_after":len(after),"amounts_unchanged":True},"dimension_registry": registry, "budget_dimensions": budget_dimensions,
             "forecast_dimensions": profile.get("forecast_dimensions", [entry["id"] for entry in registry]),
+            **({'visible_dimensions':profile['visible_dimensions']} if 'visible_dimensions' in profile else {}),
             "profile_id": profile_key(profile), "profile_version": 2}
 
 
-def recommend(profile, raw, columns=None):
+def recommend(profile, raw, columns=None, *, all_fields=False):
     """Candidates, never silent activation. Numeric identifiers may be valid categories."""
     candidates = []
-    eligible = ("sales", "orders", "order_items", "products", "customers")
+    eligible = tuple(raw) if all_fields else ("sales", "orders", "order_items", "products", "customers")
     used = {item["id"] for item in profile.get("dimensions", [])}
     for table in eligible:
         if table not in raw:
             continue
-        fields = sorted({key for row in raw[table][:1000] for key in row})
+        fields = list(dict.fromkeys([key for row in raw[table][:1000] for key in row]+list((columns or {}).get(table,{}))))
         mapping = profile["tables"][table].get("mapping", {})
         standard = {value: key for key, value in mapping.items()}
         for field in fields:
             canonical = standard.get(field, field)
-            if canonical in BUILTINS or canonical in {"sale_line_id", "order_id", "order_item_id", "customer_id", "line_number"}:
+            if not all_fields and (canonical in BUILTINS or canonical in {"sale_line_id", "order_id", "order_item_id", "customer_id", "line_number"}):
                 continue
-            if any(word in canonical.lower() for word in ("date", "amount", "cost", "price", "quantity", "discount", "日期", "时间", "金额", "数量", "订单号", "流水号")):
+            measure=any(word in canonical.lower() for word in ("date", "amount", "cost", "price", "quantity", "discount", "日期", "时间", "金额", "数量", "订单号", "流水号"))
+            if not all_fields and measure:
                 continue
-            preferred = next(((key, label) for key, (label, aliases) in ALIASES.items() if any(alias in field.lower() for alias in aliases)), None)
+            search_name=field.lower()+' '+str((columns or {}).get(table,{}).get(field,'')).lower()
+            preferred = next(((key, label) for key, (label, aliases) in ALIASES.items() if any(alias in search_name for alias in aliases)), None)
+            if table in ('expenses','expense_budget','budget_expenses'):preferred=None
             samples = [row.get(field) for row in raw[table][:1000] if row.get(field) not in (None, "")]
-            if not preferred and samples and not isinstance(samples[0], str):
+            if not all_fields and not preferred and samples and not isinstance(samples[0], str):
                 continue
             key = preferred[0] if preferred else "dim_" + hashlib.sha256((table+":"+field).encode()).hexdigest()[:12]
-            if key in used:
+            if key in used and not all_fields:
                 continue
-            candidates.append({"id": key, "label": preferred[1] if preferred else field,
-                               "table": table, "field": field, "recommended": preferred is not None,
+            builtin=canonical if table=='sales' and canonical in BUILTINS else next((name for name,pair in {'product_id':('order_items','product_id'),'channel_id':('orders','channel_code'),'region_id':('orders','region_code')}.items() if (table,field)==pair),None)
+            existing=next((item for item in profile.get('dimensions',[]) if item['bindings']['sales']['table']==table and item['bindings']['sales']['field']==field),None)
+            if existing:key=existing['id']
+            candidates.append({"id": key, "label": (existing or {}).get('label') or (preferred[1] if preferred else field),
+                               "table": table, "field": field, "recommended": preferred is not None and not measure,'builtin_id':builtin,
                                "sample_values": [display(value) for value in dict.fromkeys(code(v) for v in samples)][:5],
                                "missing_rate": sum(row.get(field) in (None, "") for row in raw[table][:1000]) / max(1, len(raw[table][:1000])),
                                "comment": (columns or {}).get(table, {}).get(field, "")})

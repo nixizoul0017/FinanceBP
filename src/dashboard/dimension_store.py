@@ -37,7 +37,10 @@ def clean_layout(value, known, strict=True):
 
 
 def mapping_signature(profile):
-    return hashlib.sha256(json.dumps({key:profile.get(key) for key in ('profile_version','dimensions','forecast_dimensions')} | {'core_mappings':{name:value.get('mapping',{}) for name,value in profile['tables'].items() if name not in profile.get('lookup_tables',[])}},sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+    payload={key:profile.get(key) for key in ('profile_version','dimensions','forecast_dimensions')}
+    payload.update({key:profile[key] for key in ('dimension_labels','visible_dimensions') if key in profile})
+    payload['core_mappings']={name:value.get('mapping',{}) for name,value in profile['tables'].items() if name not in profile.get('lookup_tables',[])}
+    return hashlib.sha256(json.dumps(payload,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
 
 
 class DimensionStore:
@@ -90,7 +93,7 @@ class DimensionStore:
 
     def layout(self, key, known):
         context=self.context(key)
-        default={'slots':[field for field in BUILTINS if field in known],'group_by':[next(iter(known))] if known else []}
+        default={'slots':([field for field in BUILTINS if field in known] or list(known)[:3]),'group_by':[next(iter(known))] if known else []}
         try:
             layout, unknown=clean_layout(context.get('last_layout',default),known,False)
         except ValueError:
@@ -172,6 +175,7 @@ class DimensionStore:
         validate_dimensions(candidate)
         candidate.setdefault('forecast_dimensions', [*BUILTINS, *(item['id'] for item in dimensions)])
         override={key:candidate[key] for key in ('profile_version','profile_id','dimensions','tables','forecast_dimensions')}
+        override.update({key:candidate[key] for key in ('dimension_labels','visible_dimensions') if key in candidate})
         override['lookup_tables']=candidate.get('lookup_tables',[])
         if not self.update(profile_key(profile),mapping=override,mapping_base_signature=mapping_signature(base_profile or profile)):
             raise ValueError(self.warning)

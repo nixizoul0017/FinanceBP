@@ -65,7 +65,7 @@ test_dashboard_theme.py覆盖三色×九页、切换后图表数值/筛选/缓�
 
 公开仓库为 `nixizoul0017/FinanceBP`，默认分支main。只按scripts/package_project.py的release_files白名单提交源码，不能直接把整个工作目录加入Git。仓库根README优先展示EXE，源码环境与Windows/Mac浏览器入口见[源码运行说明](SOURCE_RUN.md)，数据用途与复现见[模拟数据说明](DEMO_DATA.md)。
 
-Windows体验版标签为 `v1.0.0-rc.1`，应用内部版本保持1.0.0，Release标记为预发布。EXE超过普通Git文件大小限制，应连同源码ZIP及两份SHA256文件放入Release附件，不进入Git历史；体验版下载按钮使用指定标签地址，不能依赖latest正式版地址。安装包保持已验收内容，文档变动后重新生成源码ZIP及其校验值。
+当前Windows体验版标签为 `v1.2.2-rc.1`，应用内部版本1.2.2，Release标记为预发布；历史 `v1.0.0-rc.1` 保留。EXE超过普通Git文件大小限制，应连同完整源码ZIP及两份SHA256文件放入Release附件，不进入Git历史；体验版下载按钮使用指定标签地址，不能依赖latest正式版地址。发布前核对冻结应用与当前程序源码一致，发布文档变化后重新生成源码ZIP和校验值；验收状态按实际版本记录，不从历史结果推定。
 
 `.gitignore`排除本机环境、输出和私有文件，提交前仍须扫描公开文件。不要自动新增开源许可证；第三方组件许可证继续随应用保留。实际推送与附件状态记录在[项目日志](PROJECT_LOG.md)，未验证远端下载前不标记发布完成。
 
@@ -88,5 +88,7 @@ Windows体验版标签为 `v1.0.0-rc.1`，应用内部版本保持1.0.0，Releas
 当前交付包含Windows/Mac启动入口；Python3.13的本机回归不等于实体Mac验收。月报身份按实际筛选与有序分组产生，改条件后提示重新生成。
 
 ## 0.5.1交互回归
+
+1.1.1加载生命周期：页面等待输入时必须在st.stop之前关闭遮罩，不能仅依赖finally的界面更新。tests/test_business_import_ui.py覆盖从已加载来源切入、预览待确认和桌面原生文件入口。脚本空闲时CSS保护同时生效。旧EXE目录在使用时，可给scripts/build_windows_app.py传入`--bundle-dir dist/windows-版本`生成独立bundle；安装器使用本次构建目录，个人数据位置不变。
 
 tests/test_filter_apply.py覆盖连续编辑后统一提交、同值禁用、取消/切页、方案待选与记忆、候选快照复用、单位/顺序缓存复用、联合分组、刷新失效不扩大范围、旧月报及失败后加载清除。旧页面财务断言先选择再调用apply_filters；不要把待选控件值直接用于下载身份。完整回归仍需加上scripts/stage11.py和浏览器实机检查。AppTest的.run会运行完整脚本，实际局部更新另通过浏览器验证图表保留及无全屏遮罩。

@@ -169,6 +169,8 @@ def build_report(engine,month,filters=Filters(),version="B2026_V1",*,method="aut
     details={name:frame.to_dict("records") for name,frame in detail_tables(engine,month,filters).items()}
     sources={"analysis":analysis,"drivers":drivers,"forecast":forecast,"monthly":monthly,"details":details}
     result={"metadata":{"report_version":"monthly_report_v1","entity_id":engine.entity_id,"rule_version":engine.metadata["rule_version"],"source_fingerprint":engine.metadata.get("source_fingerprint"),"coverage":engine.metadata["coverage"],"month":month,"budget_version":version,"sales_filters":filters.as_dict(),"scope_label":scope_label(filters,engine.registry if len(engine.dimension_ids)>3 else None),"amount_unit":"人民币不含税元","data_origin":data_origin,"commentary_mode":"固定模板，引用已计算事实","forecast_status":forecast_status,"forecast_settings":{"method":method,"window":window,"objective":objective}},"sources":sources,"commentary":commentary(sources)}
+    if engine.metadata.get('quantity_basis')=='one_per_row':
+        result['metadata'].update(quantity_basis='one_per_row',quantity_note='未提供成交数量列，每条明细默认按1计数，非来源实际商品件数')
     if len(engine.dimension_ids)>3 or group_by is not None:
         groups=tuple(group_by) if group_by is not None else ('product_id',)
         grouped=engine.dimensions(month,by=groups,filters=filters).to_dict('records') if groups else []

@@ -100,6 +100,8 @@ def workbook_tables(report):
             sections.append(section("公司费用预算比较（空分类表示该版本未细分）",["月份","类别","部门","渠道归属","区域归属","实际（元）","预算（元）","差异（元）"],[[row.get(field) for field in ("month","expense_category","department","channel_scope","region_scope","actual","budget","variance")] for row in a["company_budget"]["expenses"]["details"]],["date"]+["text"]*4+["money"]*3))
         sheet(name,sections)
     rules=[["数据属性",meta["data_origin"]],["报告版本",report["report_id"]],["企业",meta["entity_id"]],["财务口径",meta["rule_version"]],["报告月份",meta["month"]],["实际覆盖",str(meta["coverage"])],["销售范围",meta["scope_label"]],["金额","人民币不含税元"],["预算版本",meta["budget_version"]],["来源指纹",meta["source_fingerprint"]],["预测内容身份",report["forecast_content_id"]],["训练指纹",f["metadata"]["training_fingerprint"] if f else None],["净收入","确认销售收入减退款确认月事件金额"],["净成本","历史成交成本减当月可回库成本转回"],["经营利润","公司毛利减已建模公司费用；共同费用未分摊"],["零与未知","0是已确认零值；不可用是必要数据缺失"],["刷新方式","本次结果快照，修改假设后在网页重新生成"],["点评","固定模板引用计算事实，待验证建议单列"],["原始来源","已校验的标准销售、退款、费用和预算；来源数据库只读"]]
+    if meta.get('quantity_basis')=='one_per_row':
+        rules.append(['数量默认方式',meta['quantity_note']])
     if 'group_by' in meta:
         rules.extend([['联合分组顺序',' → '.join(dim_labels[field] for field in meta['group_by'])],['可用分类','、'.join(dim_labels.values())],['预算粒度','、'.join(budget_labels)],['预测建模粒度','、'.join(dim_labels[field] for field in meta.get('model_dimensions',dims))]])
     ledger=[[row["fact_id"],row["scope"],row["period"],"比例小数" if row["unit"]=="ratio" else "元",row["value"],"/".join(map(str,row["source_path"]))] for row in report["commentary"]["facts"]]

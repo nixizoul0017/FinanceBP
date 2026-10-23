@@ -1,4 +1,4 @@
-FinanceBP 1.0.0 - Windows 11 x64
+FinanceBP 1.2.2 - Windows 11 x64
 
 Personal use and portfolio build. This installer and FinanceBP.exe are NOT code signed.
 Windows may display an unknown publisher notice. Do not disable Windows security.

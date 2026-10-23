@@ -38,6 +38,8 @@ from dashboard.dimension_ui import initialize as initialize_filters, render_cont
 from dashboard.result_cache import cached_result
 from dashboard.exports import export_artifact
 from dashboard.uploads import import_artifact
+from dashboard.file_import_ui import render_file_importer
+from dashboard.column_catalog_ui import render_catalog_workspace, render_database_importer
 from desktop.events import stage as desktop_stage
 from dashboard.dimension_setup import render_setup
 from reporting.service import build_report, markdown_report, SCENARIOS as REPORT_SCENARIOS
@@ -60,7 +62,21 @@ loading_placeholder = st.empty()
 def begin_loading():
     loading_placeholder.markdown('<div class="fb-loading" data-active="true" role="status" aria-live="polite"><div class="loading-card"><span class="loading-ring"></span><strong>加载中</strong><span>正在准备分析页面，请稍候…</span></div></div>', unsafe_allow_html=True)
 
+
+def end_loading():
+    loading_placeholder.markdown('<div class="fb-loading" data-active="false" aria-hidden="true"></div>',unsafe_allow_html=True)
+
+
+def stop_page():
+    # st.stop keeps the runner in STOP state, so UI updates in finally are dropped.
+    # Release the blocking overlay before requesting that state transition.
+    end_loading()
+    st.stop()
+
 try:
+    if st.session_state.pop('_catalog_clear_password',False):
+        st.session_state.pop('catalog_db_password',None)
+        st.session_state.pop('catalog_resume_password',None)
     if any((st.session_state.pop('_filter_loading',False),st.session_state.pop('_source_loading',False))):
         begin_loading()
     if st.session_state.pop("clear_dimension_password_next",False):
@@ -104,6 +120,15 @@ try:
         st.session_state.pop("report_generated",None)
 
 
+    def change_import_mode():
+        clear_snapshot()
+        active=st.session_state.get('_business_profile')
+        mode=st.session_state.get('custom_import_mode')
+        if active and ((mode=='连接数据库并识别表头' and active['source']['kind']!='mysql') or (mode=='上传业务数据（Excel / DTA 等）' and active['source']['kind']!='files')):
+            st.session_state.pop('_business_profile',None)
+            st.session_state['_business_edit']=False
+
+
     def load_snapshot(profile, identity, password=None):
         desktop_stage('数据读取与校验')
         begin_loading()
@@ -111,7 +136,8 @@ try:
         try:
             if profile["source"]["kind"] == "mysql":
                 connection = db_engine(profile["source"]["connection"], password="" if password is None else password)
-            facts = load_facts(profile, connection)
+            prepared=st.session_state.pop('_business_prepared',None)
+            facts=prepared['facts'] if prepared and prepared['identity']==identity else load_facts(profile,connection)
             fresh_engine=FinancialEngine(facts)
             clear_results()
             st.session_state["engine"] = fresh_engine
@@ -308,19 +334,32 @@ try:
         page = render_navigation()
         st.divider()
         source = st.selectbox("数据来源", [*PRESETS, "自定义配置"], key="source", on_change=clear_snapshot)
-        uploaded = import_artifact("选择数据源配置", type="json", key="profile_upload") if source == "自定义配置" else None
+        import_mode=st.radio('自定义接入方式',['上传业务数据（Excel / DTA 等）','连接数据库并识别表头','已有JSON配置（高级）'],key='custom_import_mode',on_change=change_import_mode) if source=='自定义配置' else None
+        uploaded=import_artifact('选择已有JSON接入配置',type='json',key='profile_upload') if import_mode=='已有JSON配置（高级）' else None
 
     try:
-        profile = selected_profile(source, uploaded)
+        if import_mode=='连接数据库并识别表头' or (import_mode=='上传业务数据（Excel / DTA 等）' and st.session_state.get('_business_edit') and st.session_state.get('_business_profile',{}).get('source',{}).get('kind')=='mysql'):
+            profile=render_database_importer(clear_snapshot)
+            if profile is None:stop_page()
+        elif import_mode=='上传业务数据（Excel / DTA 等）':
+            profile=render_file_importer(clear_snapshot)
+            if profile is None:
+                stop_page()
+        else:
+            profile=selected_profile(source,uploaded)
     except Exception:
         clear_results()
-        st.error("配置无法读取。请使用阶段5的连接与字段映射模板，密码不要写入配置。")
-        st.stop()
+        st.error("接入信息无法读取。业务Excel、DTA等请使用“上传业务数据”；已有字段映射JSON请使用高级配置入口。密码不要写入配置。")
+        stop_page()
 
     if profile is None:
         clear_results()
-        st.info("请在左侧选择已准备好的JSON配置。连接、映射与口径确认后，页面会预览标准数据。")
-        st.stop()
+        st.info("请在左侧选择已有JSON接入配置；直接导入Excel、DTA、CSV等业务表，请切换到“上传业务数据”。")
+        stop_page()
+
+    if profile.get('adapter')=='column_catalog_v1':
+        render_catalog_workspace(profile,page)
+        stop_page()
 
     # Stable UI identity for an evolving list of monthly files; CLI v1 is unchanged.
     if profile['source']['kind']=='files' and not profile.get('profile_id'):
@@ -377,13 +416,13 @@ try:
         except Exception:
             clear_results()
             st.error("找不到来源文件，请确认配置中的路径及完整模拟文件。")
-            st.stop()
+            stop_page()
         refresh = st.sidebar.button("刷新文件数据", width="stretch", key="refresh_files")
         if refresh or st.session_state.get("snapshot_identity") != identity:
             with st.spinner("正在核对数据并准备看板…"):
                 load_snapshot(profile, identity)
 
-    if st.sidebar.button('分类识别与映射',key='open_dimension_setup',width='stretch',icon=':material/tune:'):
+    if st.sidebar.button('分类与映射',key='open_dimension_setup',width='stretch',icon=':material/tune:'):
         st.session_state['dimension_setup_open']=True
         st.session_state['dimension_draft_profile']=deepcopy(active_profile)
         st.session_state.pop('dimension_edit_specs',None)
@@ -391,10 +430,10 @@ try:
 
     if st.session_state.get("source_error"):
         st.error(st.session_state["source_error"])
-        st.stop()
+        stop_page()
     if "engine" not in st.session_state:
         st.info("在左侧填写连接信息，然后点击“读取 / 刷新数据库”。")
-        st.stop()
+        stop_page()
 
     engine = st.session_state["engine"]
     finance_store=WorkspaceStore()
@@ -441,12 +480,16 @@ try:
                         '万元' if source=='完整模拟数据' else '元')
     if st.session_state.get('_filter_invalid'):
         st.info('请先在上方核对并应用筛选，再查看分析和下载。')
-        st.stop()
+        stop_page()
     applied,filters,scope_text=applied_scope(engine)
     month,version,unit=applied['month'],applied['version'],applied['unit']
     actual_version=version if versions else 'B2026_V1'
     group_by=tuple(applied['layout']['group_by'])
-    st.markdown(f'<div class="scope-note"><span><i></i> 数据完整截至 {coverage["complete_end"]}</span><span>已应用：{month} · {html.escape(engine.metadata.get("budget_labels",{}).get(version,version))} · {unit} · {html.escape(scope_text)} · 人民币不含税 · 销量：件</span></div>', unsafe_allow_html=True)
+    period_note='部分期间数据 · 非完整月实际' if coverage.get('incomplete_months') else '数据完整截至 '+coverage['complete_end']
+    quantity_note='数量：每行默认1' if engine.metadata.get('quantity_basis')=='one_per_row' else '销量：件'
+    st.markdown(f'<div class="scope-note"><span><i></i> {period_note}</span><span>已应用：{month} · {html.escape(engine.metadata.get("budget_labels",{}).get(version,version))} · {unit} · {html.escape(scope_text)} · 人民币不含税 · {quantity_note}</span></div>', unsafe_allow_html=True)
+    if engine.metadata.get('quantity_basis')=='one_per_row':
+        st.caption('数量口径：未提供成交数量列，每条明细默认按1计数；不是从文件中读取的实际商品件数。')
     st.sidebar.caption(f"企业：{engine.entity_id}\n\n口径：自营商品销售 v1\n\n读取时间：{st.session_state['loaded_at']}")
     st.sidebar.caption("演示来源均为模拟数据。自定义来源以配置和首次接入核对为准。")
 
@@ -463,9 +506,26 @@ try:
     if not selected["is_complete"]:
         st.warning("该月份没有完整实际数据，常规指标和完成率暂不显示。已知交易仅供明细核对。")
         if selected["actual_status"] == "partial":
-            with st.expander("查看已观察到的事件金额（仅核对，非完整实际）"):
+            with st.expander("文件内已知交易分析（非完整月实际）",expanded=True):
                 observed = selected["observed_metrics"]
+                date_range=engine.metadata.get('observed_date_range') or {}
+                if date_range:st.caption('已加载记录日期：'+date_range['start']+'至'+date_range['end']+'；下列金额只含当前月份及已应用分类范围。')
+                cards=st.columns(4)
+                cards[0].metric('已导入销售额（'+unit+'）',money_text(observed['sales_revenue'],unit))
+                cards[1].metric('已导入确认订单',observed['confirmed_orders'])
+                cards[2].metric('默认计数' if engine.metadata.get('quantity_basis')=='one_per_row' else '已导入成交数量',observed['sales_quantity'])
+                cards[3].metric('文件内平均订单金额（'+unit+'）',money_text(observed['average_order_value'],unit))
                 st.dataframe(pd.DataFrame([{"指标": LABELS[field], "已观察金额（"+unit+"）": money_text(observed[field], unit)} for field in ("sales_revenue", "refund_amount", "net_revenue", "gross_margin")]), hide_index=True, width="stretch")
+                if group_by:
+                    observed_groups=cached_result(engine,'dimensions',(month,group_by,filters),lambda:engine.dimensions(month,by=group_by,filters=filters))
+                    observed_fields=('confirmed_orders','sales_quantity','sales_revenue','refund_amount','net_revenue','net_cost','gross_margin','gross_margin_rate')
+                    rows=[{**{field:row[field] for field in group_by},**{field:(row.get('observed_metrics') or {}).get(field) for field in observed_fields},'period_is_complete':False} for row in observed_groups.to_dict('records')]
+                    observed_frame=pd.DataFrame(rows,columns=[*group_by,*observed_fields,'period_is_complete'])
+                    observed_frame.attrs['period_is_complete']=False
+                    if engine.metadata.get('quantity_basis')=='one_per_row':observed_frame['quantity_basis']='one_per_row'
+                    st.caption('按已应用的分析分组统计文件内已知交易；缺成本时毛利保持未知。')
+                    st.dataframe(human_table(observed_frame.drop(columns=['period_is_complete','quantity_basis'],errors='ignore')),hide_index=True,width='stretch')
+                    download(observed_frame,'文件内已知交易分类汇总','下载文件内分类汇总（精确元）')
     elif not selected["has_activity"]:
         st.info("当前完整月份在此筛选范围没有交易，收入与毛利为0。")
     for issue in set(selected["data_issues"] + company["data_issues"]):
@@ -632,7 +692,7 @@ try:
     elif page == "预测与情景":
         if not engine.is_complete(month):
             st.info("已应用月份没有完整实际数据。请在顶部选择完整月份并应用后进行预测。")
-            st.stop()
+            stop_page()
         st.markdown("### 截至时点的滚动预测")
         st.caption("本次模型只使用"+month+"及此前完整实际。全年预测＝年初至截止月实际＋剩余月份预测，预算保留所选原版本。情景参数作用于公司全部业务；商品、渠道、区域筛选用于查看其中一部分，公司费用与利润采用公司全口径。")
         model_columns=st.columns(3)
@@ -649,7 +709,7 @@ try:
                     forecast_cache[base_key]=forecast_base(engine,month,method,window,actual_version,objective)
                 except ValueError:
                     st.info("当前来源或截止月不足以支持预测，请核对完整覆盖、件数口径和预算版本。")
-                    st.stop()
+                    stop_page()
         base=forecast_cache[base_key]
         st.info("当前使用："+METHOD_LABELS[base["metadata"]["method"]]+"。回测按公司全口径、相同验证月份比较；收入、毛利和利润的最优方法可能不同。")
         st.markdown("#### 自定义未来假设")
@@ -855,10 +915,11 @@ try:
 
     else:
         st.markdown("#### 来源与口径")
-        st.caption(f"企业 {engine.entity_id} · 已确认实际范围 {coverage['complete_start']} 至 {coverage['complete_end']} · 本次读取 {st.session_state['loaded_at']}")
+        st.caption(f"企业 {engine.entity_id} · 配置月份范围 {coverage['complete_start']} 至 {coverage['complete_end']} · {period_note} · 本次读取 {st.session_state['loaded_at']}")
         st.caption("销售确认月与退款确认月分别统计。下面销售与退款跟随当前筛选，公司费用保留全公司范围；下载金额始终为元。")
         details = detail_tables(engine, month, filters)
         scope_metadata = {"entity_id": engine.entity_id, "source_fingerprint": engine.metadata.get("source_fingerprint"), "rule_version": engine.metadata["rule_version"], "month": month, "coverage": coverage, "amount_unit": "CNY excluding tax yuan", "sales_filters": filters.as_dict(), "group_by": list(group_by), "dimension_registry": engine.registry, "details": {name: {"row_count": len(frame), "source_available": frame.attrs.get("source_available"), "period_is_complete": frame.attrs.get("period_is_complete"), "scope": frame.attrs.get("scope")} for name, frame in details.items()}}
+        if engine.metadata.get('quantity_basis')=='one_per_row':scope_metadata['quantity_basis']='one_per_row'
         export_artifact("下载明细范围与完整性说明（JSON）", data=json.dumps(scope_metadata, ensure_ascii=False, indent=2, default=encode).encode("utf-8"), file_name=safe_export_name(engine.entity_id, month, "明细范围说明", filters, fingerprint=engine.metadata.get("source_fingerprint")).replace(".csv", ".json"), mime="application/json", key="download_scope_metadata", on_click="ignore")
         if group_by:
             grouped=cached_result(engine,'dimensions',(month,group_by,filters),lambda:engine.dimensions(month,by=group_by,filters=filters))
@@ -898,4 +959,5 @@ finally:
         desktop_stage('页面就绪','ready')
     elif getattr(sys.exc_info()[0],'__name__','')=='StopException':
         desktop_stage('页面提示','attention','请按页面提示核对来源或筛选。')
-    loading_placeholder.markdown('<div class="fb-loading" data-active="false" aria-hidden="true"></div>',unsafe_allow_html=True)
+    if getattr(sys.exc_info()[0],'__name__','')!='StopException':
+        end_loading()

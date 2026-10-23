@@ -57,7 +57,7 @@ def discard_draft():
 def initialize(engine,profile,months,versions,default_month,default_unit,page):
     store_scope=engine.metadata.get('profile_id') or profile_key(profile)
     scope=engine.entity_id+'|'+store_scope
-    known=list(engine.dimension_ids)
+    known=list(engine.selectable_dimension_ids)
     st.session_state['_dimension_scope']=store_scope
     token=(scope,engine.metadata.get('source_fingerprint') or id(engine),tuple(known))
     fresh=st.session_state.get('_filter_snapshot')!=token
@@ -228,7 +228,7 @@ def render_controls(engine,profile,page,months,versions,default_month,default_un
         st.caption('独立于范围筛选；列顺序按此选择顺序排列，点击应用后生效。')
         if 'dimension_group_by' not in st.session_state:
             st.session_state['dimension_group_by']=list(st.session_state['dimension_layout']['group_by'])
-        st.multiselect('分组维度（顺序决定列顺序）',list(engine.dimension_ids),format_func=engine.dimension_labels.get,
+        st.multiselect('分组维度（顺序决定列顺序）',list(engine.selectable_dimension_ids),format_func=engine.dimension_labels.get,
                        key='dimension_group_by',on_change=_group_changed,placeholder='选择一个或多个分组维度')
     st.session_state['_filter_draft']=deepcopy(_collect())
     dirty=_dirty()
@@ -244,7 +244,7 @@ def render_controls(engine,profile,page,months,versions,default_month,default_un
 
 
 def render_filters(engine,profile):
-    known=list(engine.dimension_ids)
+    known=list(engine.selectable_dimension_ids)
     store=DimensionStore()
     scope=st.session_state['_dimension_scope']
     lookup={x['id']:x for x in store.schemes(scope)}

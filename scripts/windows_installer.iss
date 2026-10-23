@@ -1,8 +1,12 @@
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.2.2"
 #endif
+
 #ifndef ProjectRoot
   #define ProjectRoot ".."
+#endif
+#ifndef AppBundleDir
+  #define AppBundleDir ProjectRoot + "\dist\windows\FinanceBP"
 #endif
 
 [Setup]
@@ -37,7 +41,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: checkedonce
 
 [Files]
-Source: "{#ProjectRoot}\dist\windows\FinanceBP\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#AppBundleDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#ProjectRoot}\outputs\desktop_build\tools\MicrosoftEdgeWebView2RuntimeInstallerX64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: NeedsWebView
 
 [Icons]

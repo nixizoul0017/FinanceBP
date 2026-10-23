@@ -17,7 +17,8 @@ def main():
     base.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='regression-',dir=base) as directory:
         env={**os.environ,'FINANCEBP_DESKTOP':'0','FINANCEBP_DATA_DIR':directory,
-             'FINANCEBP_RUN_DIR':'','FINANCEBP_RESOURCES_DIR':'','PYTHONUTF8':'1'}
+             'FINANCEBP_RUN_DIR':'','FINANCEBP_RESOURCES_DIR':'','PYTHONUTF8':'1',
+             'TEMP':directory,'TMP':directory}
         return subprocess.run([sys.executable,'-m','unittest','discover','-s','tests','-p',args.pattern,'-v'],cwd=ROOT,env=env).returncode
 
 

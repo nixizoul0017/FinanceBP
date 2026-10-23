@@ -21,7 +21,8 @@ def allowed(name):
     p=Path(name)
     return (not p.is_absolute() and '..' not in p.parts and
             (p.as_posix() in FIXED or (len(p.parts)==3 and p.parts[:2]==('forecasts','runs') and p.name.startswith('FC9_') and p.suffix=='.json')
-             or (len(p.parts)==2 and p.parts[0]=='profiles' and p.suffix=='.json')))
+             or (len(p.parts)==2 and p.parts[0]=='profiles' and p.suffix=='.json')
+             or (len(p.parts)==3 and p.parts[:2]==('profiles','business_imports') and p.name.endswith('.local.json'))))
 
 
 def safe_target(root,name):
@@ -79,6 +80,7 @@ def files(root):
     paths=[root/name for name in FIXED]
     for directory,pattern in (('forecasts/runs','FC9_*.json'),('profiles','*.json')):
         paths.extend((root/directory).glob(pattern))
+    paths.extend((root/'profiles/business_imports').glob('*.local.json'))
     return [p for p in paths if p.is_file() and allowed(p.relative_to(root).as_posix())]
 
 

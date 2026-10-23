@@ -142,25 +142,39 @@ class Host:
 
     def upload(self,path):
         import webview
+        from etl.file_tables import FILE_TYPES, MAX_FILE_BYTES
+        created=[]
         try:
             request=json.loads(path.read_text(encoding='utf-8'))
             if uuid.UUID(hex=path.stem).hex!=path.stem or request.get('id')!=path.stem:
                 raise ValueError('文件选择请求无效')
             types=request['types']
-            if any(value not in ('json','xlsx') for value in types): raise ValueError('不支持的文件类型')
+            if any(value not in FILE_TYPES for value in types): raise ValueError('不支持的文件类型')
             patterns=';'.join('*.'+value for value in types) or '*.*'
-            choice=self.window.create_file_dialog(webview.FileDialog.OPEN,file_types=(f'支持的文件 ({patterns})',))
+            multiple=bool(request.get('multiple',False))
+            choice=self.window.create_file_dialog(webview.FileDialog.OPEN,file_types=(f'支持的文件 ({patterns})',),allow_multiple=multiple)
             if not choice:
                 result={'state':'cancelled'}
             else:
-                source=Path(choice[0])
-                if types and source.suffix.lower().lstrip('.') not in types: raise ValueError('请选择匹配的JSON或Excel文件')
-                if source.stat().st_size>min(int(request['limit']),20*1024*1024): raise ValueError('文件超过20MB，请拆分后再导入')
-                data=source.read_bytes()
-                if len(data)>20*1024*1024: raise ValueError('文件过大')
-                path.with_suffix('.bin').write_bytes(data)
-                result={'state':'selected','name':source.name,'source_path':str(source.resolve())}
+                selected=list(choice) if multiple else [choice[0]]
+                if len(selected)>20: raise ValueError('一次最多选择20个业务文件')
+                values=[]
+                total=0
+                limit=min(max(int(request['limit']),1),MAX_FILE_BYTES)
+                for index,item in enumerate(selected):
+                    source=Path(item)
+                    if types and source.suffix.lower().lstrip('.') not in types: raise ValueError('所选文件的扩展名与支持类型不符')
+                    if source.stat().st_size>limit: raise ValueError('文件超过所示大小限制，请拆分后再导入')
+                    data=source.read_bytes()
+                    total+=len(data)
+                    if len(data)>limit or total>200*1024*1024: raise ValueError('单文件超过限制，或本次文件总量超过200MB')
+                    blob=path.parent/(path.stem+'_'+str(index)+'.bin') if multiple else path.with_suffix('.bin')
+                    created.append(blob)
+                    blob.write_bytes(data)
+                    values.append({'name':source.name,'source_path':str(source.resolve())})
+                result={'state':'selected','files':values} if multiple else {'state':'selected',**values[0]}
         except Exception as error:
+            for blob in created: blob.unlink(missing_ok=True)
             result={'state':'error','message':'无法读取所选文件：'+str(error)}
         atomic_json(path.with_suffix('.result'),result)
         path.unlink(missing_ok=True)

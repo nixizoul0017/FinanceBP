@@ -5,7 +5,7 @@ from .metrics import Filters, month_date
 def analysis_pack(engine, month, filters=Filters(), version="B2026_V1"):
     month = month_date(month)
     company_budget = company_budget_comparison(engine, month, version=version)
-    return {
+    result = {
         "metadata": {"entity_id": engine.entity_id, "rule_version": engine.metadata["rule_version"], "source_fingerprint": engine.metadata.get("source_fingerprint"), "coverage": engine.metadata["coverage"], "semantics": engine.metadata.get("semantics"), "month": month, "filters": filters.as_dict(), "budget_version": version},
         "selected_scope": engine.summary(month, filters=filters),
         "company_scope": engine.summary(month),
@@ -16,3 +16,6 @@ def analysis_pack(engine, month, filters=Filters(), version="B2026_V1"):
         "dimensions": {name: engine.dimensions(month, by=name, filters=filters).to_dict("records") for name in engine.dimension_ids},
         "company_expense_details": engine.expense_details(month).to_dict("records"),
     }
+    if engine.metadata.get('quantity_basis')=='one_per_row':
+        result['metadata']['quantity_basis']='one_per_row'
+    return result

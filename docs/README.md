@@ -6,6 +6,8 @@
 |---|---|
 | 下载安装、桌面启动、导出、换电脑 | [Windows应用指南](WINDOWS_APP.md)、[使用指南](USER_GUIDE.md) |
 | 星辰优选的完整、多维、异名及小样本 | [模拟数据说明](DEMO_DATA.md) |
+| 上传自己的Excel、Stata、CSV及其他业务表 | [业务文件导入说明（1.1.0）](FILE_IMPORT.md) |
+| 选表头行、勾选任意分类、改名及后续编辑 | [按表头勾选分类（1.2.0）](HEADER_CATALOG.md) |
 | 应用/取消筛选、新维度、联合汇总、方案记忆 | [动态分类指南](reference/dynamic_dimensions.md) |
 | 编制预算、对账确认、历史变化及异常跟进 | [财务工作流程](reference/finance_workflow.md) |
 | 查看历程，继续记录每一步 | [项目日志](PROJECT_LOG.md) |
