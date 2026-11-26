@@ -42,7 +42,7 @@ from dashboard.file_import_ui import render_file_importer
 from dashboard.column_catalog_ui import render_catalog_workspace, render_database_importer
 from desktop.events import stage as desktop_stage
 from dashboard.dimension_setup import render_setup
-from reporting.service import build_report, markdown_report, SCENARIOS as REPORT_SCENARIOS
+from reporting.service import build_report, markdown_report, report_preflight, SCENARIOS as REPORT_SCENARIOS
 from reporting.tables import ADJUSTMENTS
 from reporting.excel import excel_bytes
 from finance.store import WorkspaceStore, WorkspaceError
@@ -106,6 +106,9 @@ try:
 
     def clear_snapshot():
         st.session_state["_source_loading"] = True
+        st.session_state.pop('_monthly_base',None)
+        st.session_state.pop('_monthly_preview',None)
+        st.session_state.pop('mapping_overrides',None)
         st.session_state.pop("ui_workspace", None)
         for key in ("engine", "snapshot_identity", "loaded_at", "pack_cache", "driver_cache", "month", "budget_version", "product_filter", "channel_filter", "region_filter", "trend_start", "db_host", "db_port", "db_user", "db_name", "db_password", "clear_password_next", "source_error"):
             st.session_state.pop(key, None)
@@ -342,7 +345,7 @@ try:
             profile=render_database_importer(clear_snapshot)
             if profile is None:stop_page()
         elif import_mode=='上传业务数据（Excel / DTA 等）':
-            profile=render_file_importer(clear_snapshot)
+            profile=render_file_importer(clear_snapshot,resolve_profile)
             if profile is None:
                 stop_page()
         else:
@@ -531,7 +534,31 @@ try:
     for issue in set(selected["data_issues"] + company["data_issues"]):
         st.warning(ISSUES.get(issue, "当前来源不足以支持部分指标。"))
 
+    if page in ("经营总览","点评与月报"):
+        try:
+            finance_snapshot=workflow_snapshot(finance_store,finance_context,engine,month)
+        except WorkspaceError as error:
+            st.warning(str(error)+'；本机核对状态不可用。')
+            finance_snapshot=None
+        preflight=report_preflight(engine,finance_snapshot)
+
     if page == "经营总览":
+        st.markdown('#### 当月工作清单')
+        actions=st.columns(4)
+        rec=(finance_snapshot or {}).get('reconciliation',{})
+        pending='、'.join(r['指标'] for r in rec.get('rows',[]) if r['外部核对']!='已核对')
+        def open_task(target,tab):
+            st.session_state['finance_landing']=tab
+            navigate(target)
+        generated=st.session_state.get('report_generated',{})
+        generated_key=generated.get('key',())
+        current_report=bool(generated_key and generated_key[0]==key and generated_key[-3:]==(group_by,content_digest(finance_snapshot),st.session_state.get('_history_mode','mom')))
+        for col,(label,target,tab) in zip(actions,[
+                ('数据覆盖 · '+('完整月' if selected['is_complete'] else '待补齐'),'数据与下载','财务对账'),
+                ('公司全口径对账 · '+('待核对 '+pending if pending else '已核对' if rec.get('can_confirm') else '查看阻碍项'),'对账与跟进','财务对账'),
+                ('月份确认 · '+preflight['月份确认'],'对账与跟进','月份确认'),
+                ('月报 · '+('已生成' if current_report else '待生成'),'点评与月报','财务对账')]):
+            col.button(label,on_click=open_task,args=(target,tab),width='stretch')
         st.markdown('<style>.st-key-primary_metrics{--fb-money-unit:"' + unit + '";}</style>', unsafe_allow_html=True)
         with st.container(key="primary_metrics"):
             cards = st.columns(4)
@@ -844,6 +871,8 @@ try:
 
     elif page == "点评与月报":
         st.markdown("### 经营点评与月报")
+        st.markdown('#### 生成前核对')
+        st.dataframe([{'月份':month,'销售范围':scope_text,'预算版本':version or '无',**preflight}],hide_index=True,width='stretch')
         st.caption("固定模板引用已计算事实，调查建议单列。月报是当前月份、销售筛选和预测设置的结果快照；调整后重新生成。公司费用与经营利润保留公司全口径。")
         st.caption("月报预测设置在本页单独选择；与预测页对照时，保持方法、窗口、选型指标和自定义假设一致。")
         with st.form("report_generation"):
@@ -857,11 +886,6 @@ try:
                 report_changes={field:Decimal(str(adjustment_columns[index%3].number_input(label+"（%）",min_value=-100.0,max_value=100.0,value=0.0,step=1.0,key="report_"+field)))/Decimal(100) for index,(field,label) in enumerate(ADJUSTMENTS.items())}
             generate=st.form_submit_button("生成点评与Excel月报",type="primary")
         report_origin="个人模拟数据" if source in PRESETS else "用户提供来源（属性及完整性以接入确认为准）"
-        try:
-            finance_snapshot=workflow_snapshot(finance_store,finance_context,engine,month)
-        except WorkspaceError as error:
-            st.warning(str(error)+'；本次月报不含本机跟进记录。')
-            finance_snapshot=None
         history_mode=st.session_state.get('_history_mode','mom')
         report_history=cached_result(engine,'historical',(month,filters,history_mode,group_by),lambda:historical_variance(engine,month,filters,history_mode,group_by))
         report_key=(key,report_method,report_window,report_objective,tuple(report_changes.items()),report_origin,group_by,content_digest(finance_snapshot),history_mode)
@@ -882,7 +906,7 @@ try:
                                 bases.clear()
                             bases[base_key]=forecast_base(engine,month,report_method,report_window,actual_version,report_objective)
                         report_base=bases[base_key]
-                    report=build_report(engine,month,filters,actual_version,method=report_method,window=report_window,objective=report_objective,assumptions=Assumptions(**report_changes),data_origin=report_origin,analysis=pack,drivers=driver_cache[key],base=report_base,group_by=group_by,workflow=finance_snapshot,historical=report_history)
+                    report=build_report(engine,month,filters,actual_version,method=report_method,window=report_window,objective=report_objective,assumptions=Assumptions(**report_changes),data_origin=report_origin,analysis=pack,drivers=driver_cache[key],base=report_base,group_by=group_by,workflow=finance_snapshot,historical=report_history,preflight=True)
                     payload=excel_bytes(report)
                     st.session_state["report_generated"]={"key":report_key,"report":report,"excel":payload}
             except Exception:

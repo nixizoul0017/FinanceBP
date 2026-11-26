@@ -15,7 +15,7 @@ from analysis.forecast_store import content_digest
 from etl.common import encode
 from .view_model import csv_bytes, money_text, percent_text
 from finance.budgets import workbook_bytes, parse_workbook, FEE_KEYS, LABELS
-from finance.reconciliation import reconciliation, compare_snapshot, CONTROL_FIELDS
+from finance.reconciliation import reconciliation, compare_snapshot, CONTROL_FIELDS, month_rows
 from finance.issues import DEFAULTS, STATUSES, detect_issues
 from finance.store import WorkspaceError
 
@@ -195,13 +195,21 @@ def historical_panel(engine,month,filters,group_by,theme):
 
 def finance_workbench(engine,store,context,month,filters,version,group_by):
     st.caption('对账及月份确认使用公司全口径。异常扫描采用当前销售筛选及分组；公司费用不会分摊给销售员。所有记录保存在本机财务工作区。')
-    tab1,tab2,tab3=st.tabs(['财务对账','月份确认','异常跟进'])
+    tab1,tab2,tab3=st.tabs(['财务对账','月份确认','异常跟进'],default=st.session_state.get('finance_landing','财务对账'))
     tag=content_digest(context)[:16]+'_'+month
     controls=store.controls(context,month)
     rec=reconciliation(engine,month,controls)
     with tab1:
         st.caption(rec['source_basis']+'。独立参考值请取自总账、业务系统核对表等外部依据，不能复制本页合计作为核对依据。允许尾差为0.01元。')
         st.dataframe(frame([{k:v for k,v in row.items() if k!='field'} for row in rec['rows']]),hide_index=True,width='stretch')
+        with st.expander('按指标核查本月业务明细'):
+            field=st.selectbox('待查指标',list(CONTROL_FIELDS),format_func=CONTROL_FIELDS.get)
+            row=next(r for r in rec['rows'] if r['field']==field)
+            role={'sales_revenue':'sales','sales_cost':'sales','refund_amount':'refunds','cogs_reversal_amount':'refunds','expenses':'expenses'}[field]
+            from etl.file_import import ROLE_LABELS
+            st.write(f"{month} · {ROLE_LABELS[role]} · 实际减参考（元）",row['实际减参考（元）'])
+            st.caption('按业务编号与独立依据逐笔比对。只有总账合计时，差额本身无法确定具体错行。')
+            st.dataframe(frame(month_rows(engine,month)[role]),hide_index=True,width='stretch')
         with st.form('finance_controls_'+tag):
             st.markdown('#### 录入独立核对依据')
             values={}

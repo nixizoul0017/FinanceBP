@@ -153,7 +153,16 @@ def validate_report(report):
     return {"status":"passed","fact_count":len(facts),"statement_count":len(report["commentary"]["statements"])}
 
 
-def build_report(engine,month,filters=Filters(),version="B2026_V1",*,method="auto",window=3,objective="net_revenue",assumptions=Assumptions(),data_origin="来源属性待确认",analysis=None,drivers=None,base=None,group_by=None,workflow=None,historical=None):
+def report_preflight(engine, workflow):
+    close=(workflow or {}).get('month_confirmation')
+    status='未确认' if not close else '确认后数据已变更' if close['actual_changed'] else '已确认'
+    checked=bool((workflow or {}).get('reconciliation',{}).get('can_confirm'))
+    return {'数据批次':engine.metadata.get('actual_source_fingerprint',engine.metadata.get('source_fingerprint')),
+            '月份确认':status,'月报状态':'已核对' if checked and status=='已确认' else '待核对',
+            '本月未结事项':sum(i['status'] not in ('resolved','ignored') for i in workflow['issues']) if workflow else '未知'}
+
+
+def build_report(engine,month,filters=Filters(),version="B2026_V1",*,method="auto",window=3,objective="net_revenue",assumptions=Assumptions(),data_origin="来源属性待确认",analysis=None,drivers=None,base=None,group_by=None,workflow=None,historical=None,preflight=False):
     month=month_date(month)
     analysis=deepcopy(analysis) if analysis is not None else analysis_pack(engine,month,filters,version)
     drivers=deepcopy(drivers) if drivers is not None else variance_pack(engine,month,filters,version)
@@ -185,6 +194,8 @@ def build_report(engine,month,filters=Filters(),version="B2026_V1",*,method="aut
     if engine.metadata.get('local_budgets'):
         result['metadata']['budget_dimensions']=list(engine.budget_dimensions(version))
         result['metadata']['budget_label']=engine.metadata.get('budget_labels',{}).get(version,version)
+    if workflow is not None or preflight:
+        result['metadata']['preflight']=report_preflight(engine,workflow)
     result["validation"]=validate_report(result)
     # 相同计算快照可复用下载，不把生成时间放入内容身份。
     result["report_id"]="R10_"+content_digest(result)[:24]
@@ -196,6 +207,8 @@ def markdown_report(report):
     validate_report(report)
     meta=report["metadata"]
     rows=[f"# {meta['entity_id']} 经营月报 {str(meta['month'])[:7]}","",f"{meta['data_origin']}。{meta['amount_unit']}。销售范围：{meta['scope_label']}。预算：{meta['budget_version']}。",""]
+    if 'preflight' in meta:
+        rows.append(' · '.join(f'{k} {v}' for k,v in meta['preflight'].items()))
     previous=None
     for statement in report["commentary"]["statements"]:
         if statement["section"]!=previous:

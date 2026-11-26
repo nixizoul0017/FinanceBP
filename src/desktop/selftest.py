@@ -68,6 +68,13 @@ def run(paths,mysql_port=None):
             'sales':{'reference':{'path':str(business),'name':business.name,'sheet_name':'销售'},'mapping':suggest_mapping('sales',table.columns)},
             'refunds':{'empty':True}})
         check('business_xlsx_net_revenue_300',FinancialEngine(load_facts(imported)).summary('2026-09')['net_revenue']==Decimal(300))
+        from etl.month_update import prepare_update
+        october=Path(temporary)/'十月订单.json'
+        october.write_text(json.dumps([{'明细编号':'0002','订单号':'0002','销售日期':'2026-10-01','数量':1,'销售金额':50,'销售成本':20}]),encoding='utf-8')
+        monthly=prepare_update(imported,{'sales':{'ref':{'path':str(october),'header_row':1,'sha256':hashlib.sha256(october.read_bytes()).hexdigest()}},
+            'refunds':{'missing':{'2026-10':'empty'}}},'2026-10','2026-10')
+        refreshed=FinancialEngine(monthly['facts'])
+        check('monthly_update_preserves_prior_month',refreshed.summary('2026-09')['net_revenue']==300 and refreshed.summary('2026-10')['net_revenue']==50)
         stata=Path(temporary)/'业务.dta'
         pd.DataFrame({'staff':[7],'day':pd.to_datetime(['2026-09-03']),'amount':[135.25]}).to_stata(stata,write_index=False,version=118,convert_dates={'day':'td'},variable_labels={'staff':'销售员'})
         table=read_table(stata)

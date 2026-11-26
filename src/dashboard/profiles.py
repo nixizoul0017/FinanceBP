@@ -7,6 +7,7 @@ from pathlib import Path
 
 from etl.common import ROOT, digest, project_path, read_json
 from etl.sources import validate_profile
+from etl.month_files import source_paths
 
 PRESETS = {
     "完整模拟数据": "configs/demo_files.json",
@@ -33,7 +34,7 @@ def file_identity(profile):
     identity = {"profile": profile, "files": []}
     if profile["source"]["kind"] == "files":
         for name, setting in profile["tables"].items():
-            for path_value in setting["files"]:
+            for path_value in source_paths(setting):
                 path = project_path(path_value)
                 identity["files"].append((name, str(path), digest(path)))
     return hashlib.sha256(json.dumps(identity, sort_keys=True, default=str).encode()).hexdigest()

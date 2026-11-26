@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import uuid
 
 from desktop.paths import AppPaths
 from desktop.events import atomic_json
@@ -128,9 +129,12 @@ def stage_uploads(files, *, paths=None):
         fingerprint=hashlib.sha256(data).hexdigest()
         target=folder/(fingerprint+suffix)
         if not target.exists():
-            temporary=target.with_suffix(suffix+'.part')
-            temporary.write_bytes(data)
-            temporary.replace(target)
+            temporary=target.with_name(f'{fingerprint}.{uuid.uuid4().hex}.part')
+            try:
+                temporary.write_bytes(data)
+                temporary.replace(target)
+            finally:
+                temporary.unlink(missing_ok=True)
         if (fingerprint,suffix) not in seen:
             result.append({'path':str(target),'name':name,'sha256':fingerprint,'bytes':len(data)})
             seen.add((fingerprint,suffix))
@@ -260,12 +264,20 @@ def build_profile(entity, name, start, end, selections, *, dimension_fields=(), 
     return profile
 
 
-def save_profile(profile, *, paths=None):
+def save_profile(profile, *, paths=None, expected=None):
     paths=paths or AppPaths.current()
     folder=paths.profiles/'business_imports'
     folder.mkdir(parents=True,exist_ok=True)
     target=folder/(hashlib.sha256((profile['entity_id']+':'+profile['profile_id']).encode()).hexdigest()+'.local.json')
-    atomic_json(target,profile)
+    # Serialize preview/commit comparisons across desktop sessions.
+    import sqlite3
+    from contextlib import closing
+    paths.runtime.mkdir(parents=True,exist_ok=True)
+    with closing(sqlite3.connect(paths.runtime/'business_profile_lock.sqlite3')) as lock:
+        lock.execute('BEGIN IMMEDIATE')
+        if expected is not None and (not target.exists() or json.loads(target.read_text(encoding='utf-8')) != expected):
+            raise ValueError('接入配置已变化，请重新打开已保存的接入并预览。')
+        atomic_json(target,profile)
     return target
 
 

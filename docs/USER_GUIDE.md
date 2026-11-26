@@ -1,6 +1,6 @@
 # 使用指南
 
-**[下载 Windows 1.2.2 体验版 EXE](https://github.com/nixizoul0017/FinanceBP/releases/download/v1.2.2-rc.1/FinanceBP-1.2.2-windows-x64-setup.exe)** · [版本说明](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.2.2-rc.1) · [模拟数据说明](DEMO_DATA.md)
+**[下载 Windows 1.3.0 月结试用版 EXE](https://github.com/nixizoul0017/FinanceBP/releases/download/v1.3.0-rc.1/FinanceBP-1.3.0-windows-x64-setup.exe)** · [版本说明](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.3.0-rc.1) · [模拟数据说明](DEMO_DATA.md)
 
 ## Windows 独立安装版
 

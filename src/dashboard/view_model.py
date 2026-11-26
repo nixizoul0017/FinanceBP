@@ -104,7 +104,7 @@ def detail_tables(engine, month, filters=Filters()):
     tables = {"sales": sales, "refunds": refunds, "company_expenses": expenses}
     for name, frame in tables.items():
         scope = "company_expenses" if name == "company_expenses" else "company_sales" if filters.is_company else "sales_dimensions"
-        source_available = engine.available["expenses" if name == "company_expenses" else name]
+        source_available = engine.source_available("expenses" if name == "company_expenses" else name,[month])
         complete = engine.is_complete(month) and source_available
         frame["month"] = month
         frame["scope"] = scope

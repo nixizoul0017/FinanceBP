@@ -78,11 +78,20 @@ def read_source_tables(profile, engine=None, *, raw_records=None, sample_limit=N
                 path = project_path(path_value)
                 from .file_tables import read_table
                 options={key:setting[key] for key in ('sheet_name','header_row','encoding') if key in setting}
-                table=read_table(path,limit=sample_limit,**options)
+                table=read_table(path,limit=None if setting.get('month_files') else sample_limit,**options)
                 if column_comments is not None:
                     column_comments.setdefault(name,{}).update({field:table.comments.get(field,'') for field in table.columns})
                 records[name].extend(table.rows)
                 fingerprints.append({"dataset": name, "file": path.name, "sha256": digest(path)})
+            if setting.get('month_files'):
+                from .month_files import overlay_months, source_paths
+                records[name] = overlay_months(name, setting, records[name])[:sample_limit]
+                for value in source_paths(setting):
+                    if value not in paths:
+                        path = project_path(value)
+                        fingerprints.append({"dataset": name, "file": path.name, "sha256": digest(path)})
+                if column_comments is not None and records[name]:
+                    column_comments.setdefault(name, {}).update({k: '' for k in records[name][0] if k not in column_comments.get(name, {})})
     elif source["kind"] == "mysql":
         own_engine = engine is None
         engine = engine or db_engine(source["connection"])

@@ -213,22 +213,31 @@ class FinancialEngine:
         month = month_date(month)
         return self.complete_start <= month and month_end(month) <= self.complete_end and month not in self.incomplete_months
 
+    def source_available(self, role, months):
+        pending = self.metadata['coverage'].get('pending_sources', {})
+        return self.available[role] and not any(role in pending.get(str(month)[:7], ()) for month in months)
+
     def period_events(self, start, end, filters=Filters()):
         months = month_range(start, end)
         events = self.selected_events(filters)
         return events[events["month"].between(months[0], months[-1])].copy()
 
-    def _aggregate(self, events):
+    def _aggregate(self, events, months=()):
         result = {field: sum_decimal(events[field]) for field in ("sales_revenue", "refund_amount", "sales_cost", "cogs_reversal_amount")}
         result["sales_quantity"] = int(events["sales_quantity"].sum())
-        result["returned_quantity"] = int(events["returned_quantity"].sum()) if self.available["refunds"] else None
+        refunds_available = self.source_available("refunds", months)
+        result["returned_quantity"] = int(events["returned_quantity"].sum()) if refunds_available else None
         result["net_quantity"] = subtract(result["sales_quantity"], result["returned_quantity"])
         result["confirmed_orders"] = int(events.loc[events["event_type"] == "sale", "sale_order_id"].nunique())
         result["confirmed_lines"] = int(events["event_type"].eq("sale").sum())
         result["average_selling_price"] = ratio(result["sales_revenue"], result["sales_quantity"])
         result["average_order_value"] = ratio(result["sales_revenue"], result["confirmed_orders"])
         issues = []
-        if not self.available["refunds"]:
+        if not self.source_available("sales", months):
+            for field in ("sales_revenue","sales_cost","sales_quantity","confirmed_orders","confirmed_lines","net_quantity","average_selling_price","average_order_value"):
+                result[field] = None
+            issues.append("sales_source_missing")
+        if not refunds_available:
             result["refund_amount"] = result["cogs_reversal_amount"] = None
             issues.append("refund_source_missing")
         result["net_revenue"] = subtract(result["sales_revenue"], result["refund_amount"])
@@ -242,11 +251,11 @@ class FinancialEngine:
 
     def _summary(self, events, start, end, filters, company=False):
         months = month_range(start, end)
-        observed, issues = self._aggregate(events)
+        observed, issues = self._aggregate(events, months)
         fees = self.expenses[self.expenses["month"].between(months[0], months[-1])]
         observed.update(expenses=None, operating_profit=None, expense_rate=None, operating_margin_rate=None)
         if company:
-            if self.available["expenses"]:
+            if self.source_available("expenses", months):
                 observed["expenses"] = sum_decimal(fees["amount"])
                 observed["operating_profit"] = subtract(observed["gross_margin"], observed["expenses"])
                 observed["expense_rate"] = ratio(observed["expenses"], observed["net_revenue"])

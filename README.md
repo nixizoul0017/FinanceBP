@@ -1,16 +1,18 @@
 # FinanceBP · 财务经营分析桌面应用
 
-**Windows 11 x64｜1.2.2 体验版｜安装后点击桌面图标使用**
+**Windows 11 x64｜1.3.0 月结试用版｜安装后点击桌面图标使用**
+
+已保存的财务文件接入可按月或按年内累计更新，在应用前查看历史更正。经营总览提供月结清单，月报带数据批次和确认状态。[月度更新步骤](docs/FILE_IMPORT.md)
 
 从订单文件接入、动态分类，到经营分析、预算预测及可追溯月报，在一个独立窗口中完成。内置“星辰优选”模拟企业，安装后即可体验。
 
 ## 下载并安装
 
-### [⬇ 下载 Windows 1.2.2 安装包 EXE · 约 298 MiB](https://github.com/nixizoul0017/FinanceBP/releases/download/v1.2.2-rc.1/FinanceBP-1.2.2-windows-x64-setup.exe)
+### [⬇ 下载 Windows 1.3.0 安装包 EXE · 约 298 MiB](https://github.com/nixizoul0017/FinanceBP/releases/download/v1.3.0-rc.1/FinanceBP-1.3.0-windows-x64-setup.exe)
 
-[版本说明及全部附件](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.2.2-rc.1) · [安装与使用指南](docs/WINDOWS_APP.md) · [模拟数据说明](docs/DEMO_DATA.md)
+[版本说明及全部附件](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.3.0-rc.1) · [安装与使用指南](docs/WINDOWS_APP.md) · [模拟数据说明](docs/DEMO_DATA.md)
 
-1. **下载** `FinanceBP-1.2.2-windows-x64-setup.exe`。
+1. **下载** `FinanceBP-1.3.0-windows-x64-setup.exe`。
 2. **双击安装**，按向导完成安装，保留“创建桌面快捷方式”选项。
 3. **点击桌面 FinanceBP 图标**，等待分析页面就绪后使用。以后仍点击同一个图标。
 
@@ -18,11 +20,14 @@
 
 已有旧版：先关闭 FinanceBP，可通过“文件”菜单备份个人数据，再运行新版安装器更新，从原桌面图标打开。升级与卸载默认保留个人数据，业务来源文件需自行保管。
 
-> **当前为未签名体验版（预发布 `v1.2.2-rc.1`），应用内部版本1.2.2。** 1.2.1—1.2.2未重跑全套功能、冻结EXE或安装后验收；1.2.2仅完成指定文件的针对性接入核对。独立干净Windows、完整原生窗口及125%/150%缩放等仍待验收。历史测试数量不能视为本版全部通过。详见[实际验收记录](docs/WINDOWS_ACCEPTANCE.md)。不要为安装关闭系统安全功能。
+> **当前为未签名预发布版 `v1.3.0-rc.1`，应用内部版本 1.3.0。** 本地构建已通过 300 项回归、17 项文件至月报验收、19 项冻结 EXE 自检及 35 项打包资源交互检查。干净 Windows 11 安装、覆盖升级和系统显示缩放下的完整原生窗口验收待完成。[实际验收记录](docs/WINDOWS_ACCEPTANCE.md)
 
 “Code → Download ZIP”和源码ZIP面向学习与开发；**普通用户下载上方EXE即可**。[旧1.0体验版](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.0.0-rc.1)保留，不覆盖历史附件。
 
-## 1.2.2新增与累计改进
+## 1.3.0 新增与累计改进
+
+- **按月更新业务文件**：支持当月文件和年内累计文件。应用前按月核对金额、变动行和受影响的月份确认。
+- **月结清单和月报预检**：从总览进入对账、月份确认与月报。Excel、Markdown 和 JSON 随报附上数据批次及核对状态。
 
 - **直接导入业务文件**：支持Excel（xlsx/xls/xlsm）、Stata DTA、CSV、TSV及记录JSON，可多选文件和工作表，不必先编写配置JSON。
 - **按表头配置分类**：选择表头行，默认第1行；全部字段均可勾选为分类并改名，保留确认操作，后续在“分类与映射”继续修改。MySQL也支持按表、按列接入。

@@ -4,7 +4,7 @@ from decimal import Decimal
 from copy import deepcopy
 import pandas as pd
 
-from analysis.metrics import month_date, sum_decimal
+from analysis.metrics import month_date, month_end, sum_decimal
 from analysis.forecast_store import content_digest
 from etl.common import ZERO, encode
 from etl.dimensions import MISSING
@@ -23,12 +23,14 @@ def control_amount(value):
 def month_rows(engine,month):
     month=month_date(month)
     result={}
-    lookup={row['sale_line_id']:row for row in engine.tables['sales'].to_dict('records')}
     for name,day,key in [('sales','revenue_date','sale_line_id'),('refunds','refund_date','refund_id'),('expenses','expense_date','expense_id')]:
         rows=[]
-        for row in engine.tables[name].to_dict('records'):
-            if row[day].replace(day=1)!=month:
-                continue
+        table=engine.tables[name]
+        current=table.loc[table[day].between(month,month_end(month))]
+        if name=='refunds':
+            sales=engine.tables['sales']
+            lookup={r['sale_line_id']:r for r in sales[sales['sale_line_id'].isin(current['sale_line_id'])].to_dict('records')}
+        for row in current.to_dict('records'):
             value=deepcopy(row)
             if name=='refunds':
                 value.update({field:lookup[row['sale_line_id']][field] for field in engine.dimension_ids})
@@ -43,7 +45,7 @@ def month_rows(engine,month):
 def month_snapshot(engine,month):
     month=month_date(month)
     payload={'entity_id':engine.entity_id,'rule_version':engine.metadata['rule_version'],'month':str(month)[:7],
-             'is_complete':engine.is_complete(month),'availability':{k:engine.available[k] for k in ('sales','refunds','expenses')},
+             'is_complete':engine.is_complete(month),'availability':{k:engine.source_available(k,[month]) for k in ('sales','refunds','expenses')},
              'rows':month_rows(engine,month),'summary':engine.summary(month)}
     payload=json.loads(dumps(payload))
     payload['actual_hash']=content_digest(payload)
@@ -81,7 +83,7 @@ def reconciliation(engine,month,controls=None):
     if not summary['is_complete']:
         blockers.append('实际月份未完整载入')
     for key in ('sales','refunds','expenses'):
-        if not engine.available[key]:
+        if not engine.source_available(key,[month]):
             blockers.append(key+'来源尚未提供')
     if summary['gross_margin'] is None:
         blockers.append('历史成本或退款数据不足，毛利无法确认')

@@ -41,4 +41,4 @@
 
 1.2.2对已识别的订单表推荐少量经营分类及财务设置，用户仍可取消、增加分类或改名，所有表头候选保留。没有数量列可默认1，单日文件走部分期间分析，见[文件导入说明](FILE_IMPORT.md)。
 
-当前[1.2.2体验版](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.2.2-rc.1)包含上述更新，历史1.0体验版附件保留。三种配色和Windows/Mac源码入口保留，Windows使用新版EXE安装包；未签名和待验收范围见[验收记录](WINDOWS_ACCEPTANCE.md)。
+[1.3.0 月结试用版](https://github.com/nixizoul0017/FinanceBP/releases/tag/v1.3.0-rc.1)包含上述功能。Windows 可下载 EXE 安装包，源码运行见[源码运行说明](SOURCE_RUN.md)。[实际验收记录](WINDOWS_ACCEPTANCE.md)

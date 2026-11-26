@@ -80,10 +80,16 @@ def _validation_message(error):
     return '文件验证未通过。请检查文件是否损坏/加密、表头、日期、金额、唯一编号及字段映射；Excel公式须先计算并保存。'
 
 
-def render_file_importer(on_apply):
+def render_file_importer(on_apply, resolve=lambda profile: profile):
+    from .month_update_ui import start_update, render_update
+    if st.session_state.get('_monthly_base'):
+        render_update(on_apply,resolve)
+        return None
     active=st.session_state.get('_business_profile')
     if active and not st.session_state.get('_business_edit'):
         st.sidebar.caption('业务文件接入：'+active.get('display_name',active['entity_id']))
+        if active.get('adapter')=='mapped_facts_v1':
+            st.sidebar.button('更新业务文件',key='business_month_update',on_click=start_update,args=(active,),width='stretch')
         if active.get('tables',{}).get('sales',{}).get('quantity_basis')=='one_per_row':
             st.sidebar.caption('数量口径：未选择数量列，每条销售明细默认按1计数。')
         if st.sidebar.button('更换文件 / 修改映射',key='business_edit_open',width='stretch'):
@@ -98,6 +104,8 @@ def render_file_importer(on_apply):
     if saved:
         with st.expander('继续使用已保存的文件接入'):
             index=st.selectbox('选择接入',range(len(saved)),format_func=lambda i:saved[i]['entity_id']+' · '+saved[i].get('display_name',saved[i]['profile_id']),key='business_saved')
+            if saved[index].get('adapter')=='mapped_facts_v1':
+                st.button('更新业务文件',key='saved_month_update',on_click=start_update,args=(saved[index],))
             if st.button('使用此接入',key='business_saved_apply'):
                 try:
                     candidate=saved[index]
@@ -111,6 +119,10 @@ def render_file_importer(on_apply):
     if active and st.button('取消导入修改，返回已应用数据',key='business_cancel'):
         st.session_state['_business_edit']=False
         st.rerun()
+    if active and active.get('role_months'):
+        st.warning('这个接入已保存逐月更新。此处将从所选来源重新建立完整接入。保留历史月份时，请返回并选择“更新业务文件”。')
+        if not st.checkbox('使用全量来源重建接入',key='business_rebuild_months'):
+            return None
 
     uploaded=import_artifact('选择业务文件（可多选）',type=list(FILE_TYPES),key='business_files',max_upload_size=100,accept_multiple_files=True)
     restored=(active or {}).get('import_files',[])
@@ -272,14 +284,11 @@ def render_file_importer(on_apply):
                 facts=load_facts(candidate)
                 if facts.tables['sales'].empty:
                     raise ValueError('销售明细没有有效记录，请检查表头行与数据范围。')
+            save_profile(candidate,expected=active if active and active['profile_id']==candidate['profile_id'] else None)
             on_apply()
             st.session_state['_business_profile']=candidate
             st.session_state['_business_edit']=False
             st.session_state['_business_prepared']={'identity':file_identity(candidate),'facts':facts}
-            try:
-                save_profile(candidate)
-            except OSError:
-                st.session_state['dimension_notice']='本次导入已生效，但接入配置无法保存；请检查个人数据目录权限。'
             st.rerun()
         except Exception as error:
             st.error(_validation_message(error))
